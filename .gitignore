@@ -1,0 +1,40 @@
+# ============================================================
+# KissthePlan — Backend .gitignore
+# ============================================================
+
+# --- Docker (se gestiona fuera del repo) ---
+docker-compose.yml
+.dockerignore
+
+# --- Dependencias ---
+node_modules/
+
+# --- Build compilado (se genera en CI/Docker) ---
+dist/
+
+# --- Variables de entorno (NUNCA al repo) ---
+.env
+.env.*
+!.env.example
+
+# --- pnpm ---
+.pnpm-store/
+.pnpm-debug.log*
+
+# --- Logs ---
+*.log
+logs/
+
+# --- TypeScript incremental ---
+*.tsbuildinfo
+
+# --- OS / Editores ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# --- Certificados / claves ---
+*.pem
+*.key
+*.crt
