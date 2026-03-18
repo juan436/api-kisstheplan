@@ -84,4 +84,10 @@ export class TaskController {
     const tasks = await this.taskService.getUpcoming(wedding._id.toString());
     return tasks.map((t) => this.taskService.toResponse(t));
   }
+
+  @Get('progress')
+  async getProgress(@CurrentUser('id') userId: string) {
+    const wedding = await this.weddingService.findByUserId(userId);
+    return this.taskService.getProgress(wedding._id.toString());
+  }
 }

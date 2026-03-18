@@ -6,6 +6,8 @@ import {
   Body,
   Param,
   UseGuards,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { WeddingService } from './wedding.service';
@@ -13,11 +15,15 @@ import { CreateWeddingDto } from './dto/create-wedding.dto';
 import { UpdateWeddingDto } from './dto/update-wedding.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { TaskService } from '../task/task.service';
 
 @ApiTags('Weddings')
 @Controller('weddings')
 export class WeddingController {
-  constructor(private weddingService: WeddingService) {}
+  constructor(
+    private weddingService: WeddingService,
+    @Inject(forwardRef(() => TaskService)) private taskService: TaskService,
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard)
@@ -27,6 +33,7 @@ export class WeddingController {
     @Body() dto: CreateWeddingDto,
   ) {
     const wedding = await this.weddingService.create(userId, dto);
+    await this.taskService.seedTemplate(wedding._id.toString());
     return this.weddingService.toResponse(wedding);
   }
 

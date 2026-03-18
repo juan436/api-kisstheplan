@@ -6,6 +6,7 @@ import { GuestSchema } from './guest/schemas/guest.schema';
 import { ExpenseCategorySchema } from './budget/schemas/expense-category.schema';
 import { PaymentScheduleSchema } from './budget/schemas/payment-schedule.schema';
 import { TaskSchema } from './task/schemas/task.schema';
+import { defaultTaskTemplate } from './task/data/task-template';
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/kisstheplan';
 
@@ -157,24 +158,19 @@ async function seed() {
   );
   console.log(`${paymentsData.length} payments created`);
 
-  // --- Tasks (10 from mock) ---
-  const tasksData = [
-    { title: 'Confirmar menú con catering', status: 'pending', dueDate: new Date('2026-03-15'), category: 'Catering', order: 1 },
-    { title: 'Enviar invitaciones digitales', status: 'pending', dueDate: new Date('2026-03-20'), category: 'Invitados', order: 2 },
-    { title: 'Prueba de vestido final', status: 'pending', dueDate: new Date('2026-04-10'), category: 'Vestuario', order: 3 },
-    { title: 'Reunión con fotógrafo', status: 'done', dueDate: new Date('2026-02-10'), category: 'Foto', completedAt: new Date('2026-02-10'), order: 4 },
-    { title: 'Reservar autobús invitados', status: 'pending', dueDate: new Date('2026-05-01'), category: 'Transporte', order: 5 },
-    { title: 'Elegir música ceremonia', status: 'done', dueDate: new Date('2026-01-20'), category: 'Música', completedAt: new Date('2026-01-20'), order: 6 },
-    { title: 'Contratar DJ', status: 'done', dueDate: new Date('2025-12-15'), category: 'Música', completedAt: new Date('2025-12-15'), order: 7 },
-    { title: 'Decidir distribución mesas', status: 'pending', dueDate: new Date('2026-06-01'), category: 'Organización', order: 8 },
-    { title: 'Seleccionar tarta nupcial', status: 'pending', dueDate: new Date('2026-04-15'), category: 'Catering', order: 9 },
-    { title: 'Firmar contrato finca', status: 'done', dueDate: new Date('2025-11-01'), category: 'Finca', completedAt: new Date('2025-11-01'), order: 10 },
-  ];
-
+  // --- Tasks (28 from default template) ---
   await TaskModel.insertMany(
-    tasksData.map((t) => ({ ...t, weddingId: wedding._id, isCustom: false })),
+    defaultTaskTemplate.map((t) => ({
+      weddingId: wedding._id,
+      title: t.title,
+      category: t.category,
+      stage: t.stage,
+      order: t.order,
+      status: 'pending',
+      isCustom: false,
+    })),
   );
-  console.log(`${tasksData.length} tasks created`);
+  console.log(`${defaultTaskTemplate.length} tasks created from template`);
 
   console.log('\nSeed completed successfully!');
   console.log('Login: lucia@example.com / password123');

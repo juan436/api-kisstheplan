@@ -131,6 +131,8 @@ export class TaskService {
       status: task.status,
       dueDate: task.dueDate?.toISOString().split('T')[0],
       category: task.category,
+      stage: task.stage,
+      notes: task.notes,
     };
   }
 }
