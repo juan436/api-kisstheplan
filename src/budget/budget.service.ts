@@ -107,6 +107,8 @@ export class BudgetService {
     if (dto.estimated !== undefined) item.estimated = dto.estimated;
     if (dto.actual !== undefined) item.actual = dto.actual;
     if (dto.paid !== undefined) item.paid = dto.paid;
+    if (dto.dueDate !== undefined) (item as any).dueDate = dto.dueDate ? new Date(dto.dueDate) : null;
+    if (dto.notes !== undefined) (item as any).notes = dto.notes;
 
     await cat.save();
     return cat;
@@ -234,6 +236,8 @@ export class BudgetService {
         estimated: item.estimated,
         real: item.actual,
         paid: item.paid,
+        dueDate: item.dueDate ? item.dueDate.toISOString().split('T')[0] : null,
+        notes: item.notes ?? null,
       })),
     };
   }

@@ -16,6 +16,12 @@ export class ExpenseItem {
 
   @Prop({ default: 0 })
   paid: number;
+
+  @Prop()
+  dueDate?: Date;
+
+  @Prop({ trim: true })
+  notes?: string;
 }
 
 export const ExpenseItemSchema = SchemaFactory.createForClass(ExpenseItem);

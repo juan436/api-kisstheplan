@@ -24,4 +24,14 @@ export class UpdateItemDto {
   @IsNumber()
   @Min(0)
   paid?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  dueDate?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  notes?: string;
 }
