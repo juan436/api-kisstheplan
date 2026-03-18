@@ -82,12 +82,18 @@ export class WeddingService {
     return {
       id: wedding._id.toString(),
       partner1Name: wedding.partner1Name,
+      partner1Last: wedding.partner1Last || '',
+      partner1Role: wedding.partner1Role || 'Novio',
       partner2Name: wedding.partner2Name,
+      partner2Last: wedding.partner2Last || '',
+      partner2Role: wedding.partner2Role || 'Novia',
       date: wedding.date.toISOString().split('T')[0],
       venue: wedding.venue,
       location: wedding.location || '',
       estimatedGuests: wedding.estimatedGuests,
       estimatedBudget: wedding.estimatedBudget,
+      currency: wedding.currency || 'EUR',
+      timezone: wedding.timezone || 'Europe/Madrid',
       photoUrl: wedding.photoUrl,
       slug: wedding.slug,
     };

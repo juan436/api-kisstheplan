@@ -241,11 +241,13 @@ export class BudgetService {
   paymentToResponse(payment: PaymentSchedule) {
     return {
       id: payment._id.toString(),
+      categoryId: payment.categoryId?.toString() ?? null,
       vendorName: payment.vendorName,
       concept: payment.concept,
       amount: payment.amount,
       dueDate: payment.dueDate.toISOString().split('T')[0],
       paid: !!payment.paidAt,
+      notes: payment.notes,
     };
   }
 

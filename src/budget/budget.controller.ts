@@ -141,9 +141,7 @@ export class BudgetController {
   @Get('payments')
   async getPayments(@CurrentUser('id') userId: string) {
     const wedding = await this.weddingService.findByUserId(userId);
-    const payments = await this.budgetService.findPayments(
-      wedding._id.toString(),
-    );
+    const payments = await this.budgetService.findPayments(wedding._id.toString());
     return payments.map((p) => this.budgetService.paymentToResponse(p));
   }
 

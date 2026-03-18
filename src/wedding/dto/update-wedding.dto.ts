@@ -23,12 +23,22 @@ export class UpdateWeddingDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
+  partner1Role?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
   partner2Name?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   partner2Last?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  partner2Role?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()
@@ -56,6 +66,16 @@ export class UpdateWeddingDto {
   @IsNumber()
   @Min(0)
   estimatedBudget?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  currency?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  timezone?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()

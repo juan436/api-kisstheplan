@@ -15,11 +15,17 @@ export class Wedding extends Document {
   @Prop({ trim: true })
   partner1Last?: string;
 
+  @Prop({ trim: true, default: 'Novio' })
+  partner1Role?: string;
+
   @Prop({ required: true, trim: true })
   partner2Name: string;
 
   @Prop({ trim: true })
   partner2Last?: string;
+
+  @Prop({ trim: true, default: 'Novia' })
+  partner2Role?: string;
 
   @Prop({ required: true })
   date: Date;
@@ -38,6 +44,9 @@ export class Wedding extends Document {
 
   @Prop({ default: 'EUR' })
   currency: string;
+
+  @Prop({ default: 'Europe/Madrid' })
+  timezone?: string;
 
   @Prop()
   photoUrl?: string;
