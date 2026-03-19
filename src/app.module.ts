@@ -15,6 +15,7 @@ import { UploadModule } from './upload/upload.module';
 import { VendorModule } from './vendor/vendor.module';
 import { CalendarModule } from './calendar/calendar.module';
 import { ScriptModule } from './script/script.module';
+import { SeatingModule } from './seating/seating.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { ScriptModule } from './script/script.module';
     VendorModule,
     CalendarModule,
     ScriptModule,
+    SeatingModule,
   ],
   controllers: [AppController],
 })
