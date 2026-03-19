@@ -11,6 +11,10 @@ import { BudgetModule } from './budget/budget.module';
 import { TaskModule } from './task/task.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { WebPageModule } from './web-page/web-page.module';
+import { UploadModule } from './upload/upload.module';
+import { VendorModule } from './vendor/vendor.module';
+import { CalendarModule } from './calendar/calendar.module';
+import { ScriptModule } from './script/script.module';
 
 @Module({
   imports: [
@@ -31,6 +35,10 @@ import { WebPageModule } from './web-page/web-page.module';
     TaskModule,
     DashboardModule,
     WebPageModule,
+    UploadModule,
+    VendorModule,
+    CalendarModule,
+    ScriptModule,
   ],
   controllers: [AppController],
 })

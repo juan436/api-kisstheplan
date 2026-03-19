@@ -4,7 +4,6 @@ import { UserSchema } from './user/schemas/user.schema';
 import { WeddingSchema } from './wedding/schemas/wedding.schema';
 import { GuestSchema } from './guest/schemas/guest.schema';
 import { ExpenseCategorySchema } from './budget/schemas/expense-category.schema';
-import { PaymentScheduleSchema } from './budget/schemas/payment-schedule.schema';
 import { TaskSchema } from './task/schemas/task.schema';
 import { defaultTaskTemplate } from './task/data/task-template';
 
@@ -18,7 +17,6 @@ async function seed() {
   const WeddingModel = mongoose.model('Wedding', WeddingSchema);
   const GuestModel = mongoose.model('Guest', GuestSchema);
   const ExpenseCategoryModel = mongoose.model('ExpenseCategory', ExpenseCategorySchema);
-  const PaymentScheduleModel = mongoose.model('PaymentSchedule', PaymentScheduleSchema);
   const TaskModel = mongoose.model('Task', TaskSchema);
 
   // Clean existing data
@@ -27,7 +25,6 @@ async function seed() {
     WeddingModel.deleteMany({}),
     GuestModel.deleteMany({}),
     ExpenseCategoryModel.deleteMany({}),
-    PaymentScheduleModel.deleteMany({}),
     TaskModel.deleteMany({}),
   ]);
   console.log('Cleaned existing data');
@@ -145,32 +142,29 @@ async function seed() {
   console.log(`${categoriesData.length} budget categories created`);
 
   // --- Payments ---
-  const paymentsData = [
-    { vendorName: 'Finca Tagamanent', concept: '2º pago finca', amount: 2500, dueDate: new Date('2026-03-01') },
-    { vendorName: 'Catering Deluxe', concept: 'Adelanto catering', amount: 5000, dueDate: new Date('2026-03-15') },
-    { vendorName: 'Foto Moments', concept: '50% fotógrafo', amount: 1250, dueDate: new Date('2026-04-01') },
-    { vendorName: 'Sound & Music', concept: 'Señal grupo', amount: 700, dueDate: new Date('2026-04-15') },
-    { vendorName: 'Flora Bella', concept: 'Anticipo flores', amount: 900, dueDate: new Date('2026-05-01') },
-  ];
+  // --- Tasks: template (no date) + concrete tasks with dueDate ---
+  const templateTasks = defaultTaskTemplate.map((t) => ({
+    weddingId: wedding._id,
+    title: t.title,
+    category: t.category,
+    stage: t.stage,
+    order: t.order,
+    status: 'pending',
+    isCustom: false,
+  }));
 
-  await PaymentScheduleModel.insertMany(
-    paymentsData.map((p) => ({ ...p, weddingId: wedding._id })),
-  );
-  console.log(`${paymentsData.length} payments created`);
+  const concreteTasks = [
+    { title: 'Confirmar menú con catering', category: 'Catering', stage: '3-5 meses', dueDate: new Date('2026-03-25'), status: 'pending' },
+    { title: 'Enviar invitaciones digitales', category: 'Invitados', stage: '3-5 meses', dueDate: new Date('2026-04-05'), status: 'pending' },
+    { title: 'Prueba de vestido final', category: 'Vestuario', stage: '3-5 meses', dueDate: new Date('2026-04-10'), status: 'pending' },
+    { title: 'Reunión con fotógrafo', category: 'Foto', stage: '3-5 meses', dueDate: new Date('2026-03-28'), status: 'done', completedAt: new Date('2026-02-10') },
+    { title: 'Reservar autobús invitados', category: 'Transporte', stage: '3-5 meses', dueDate: new Date('2026-05-01'), status: 'pending' },
+    { title: 'Decidir distribución mesas', category: 'Organización', stage: '1-2 meses', dueDate: new Date('2026-06-01'), status: 'pending' },
+    { title: 'Seleccionar tarta nupcial', category: 'Catering', stage: '3-5 meses', dueDate: new Date('2026-04-15'), status: 'pending' },
+  ].map((t) => ({ ...t, weddingId: wedding._id, order: 99, isCustom: true }));
 
-  // --- Tasks (28 from default template) ---
-  await TaskModel.insertMany(
-    defaultTaskTemplate.map((t) => ({
-      weddingId: wedding._id,
-      title: t.title,
-      category: t.category,
-      stage: t.stage,
-      order: t.order,
-      status: 'pending',
-      isCustom: false,
-    })),
-  );
-  console.log(`${defaultTaskTemplate.length} tasks created from template`);
+  await TaskModel.insertMany([...templateTasks, ...concreteTasks]);
+  console.log(`${templateTasks.length} template tasks + ${concreteTasks.length} concrete tasks created`);
 
   console.log('\nSeed completed successfully!');
   console.log('Login: lucia@example.com / password123');

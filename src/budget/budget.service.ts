@@ -6,21 +6,16 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { ExpenseCategory } from './schemas/expense-category.schema';
-import { PaymentSchedule } from './schemas/payment-schedule.schema';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
-import { CreatePaymentDto } from './dto/create-payment.dto';
-import { UpdatePaymentDto } from './dto/update-payment.dto';
 
 @Injectable()
 export class BudgetService {
   constructor(
     @InjectModel(ExpenseCategory.name)
     private categoryModel: Model<ExpenseCategory>,
-    @InjectModel(PaymentSchedule.name)
-    private paymentModel: Model<PaymentSchedule>,
   ) {}
 
   // --- Categories ---
@@ -154,73 +149,41 @@ export class BudgetService {
     };
   }
 
-  // --- Payments ---
+  // --- Payments (from ExpenseItem.dueDate) ---
 
-  async findPayments(weddingId: string): Promise<PaymentSchedule[]> {
-    return this.paymentModel
-      .find({ weddingId: new Types.ObjectId(weddingId) })
-      .sort({ dueDate: 1 });
-  }
-
-  async createPayment(
-    weddingId: string,
-    dto: CreatePaymentDto,
-  ): Promise<PaymentSchedule> {
-    return this.paymentModel.create({
+  async findAllPaymentsForCalendar(weddingId: string) {
+    const categories = await this.categoryModel.find({
       weddingId: new Types.ObjectId(weddingId),
-      vendorName: dto.vendorName,
-      concept: dto.concept,
-      amount: dto.amount,
-      dueDate: new Date(dto.dueDate),
-      categoryId: dto.categoryId
-        ? new Types.ObjectId(dto.categoryId)
-        : undefined,
-      vendorId: dto.vendorId
-        ? new Types.ObjectId(dto.vendorId)
-        : undefined,
-      notes: dto.notes,
     });
-  }
 
-  async updatePayment(
-    paymentId: string,
-    weddingId: string,
-    dto: UpdatePaymentDto,
-  ): Promise<PaymentSchedule> {
-    const payment = await this.paymentModel.findById(paymentId);
-    if (!payment) throw new NotFoundException('Pago no encontrado');
-    if (payment.weddingId.toString() !== weddingId) {
-      throw new ForbiddenException();
+    const result: Array<{
+      id: string;
+      categoryId: string;
+      vendorName: string;
+      concept: string;
+      amount: number;
+      dueDate: string;
+      paid: boolean;
+      notes?: string;
+    }> = [];
+
+    for (const cat of categories) {
+      for (const item of cat.items as any[]) {
+        if (!item.dueDate) continue;
+        result.push({
+          id: `item-${item._id.toString()}`,
+          categoryId: cat._id.toString(),
+          vendorName: cat.name,
+          concept: item.concept,
+          amount: item.actual || item.estimated || 0,
+          dueDate: new Date(item.dueDate).toISOString().split('T')[0],
+          paid: item.paid > 0 && item.paid >= (item.actual || item.estimated || 0),
+          notes: item.notes,
+        });
+      }
     }
 
-    const updateData: Record<string, unknown> = {};
-    if (dto.vendorName !== undefined) updateData.vendorName = dto.vendorName;
-    if (dto.concept !== undefined) updateData.concept = dto.concept;
-    if (dto.amount !== undefined) updateData.amount = dto.amount;
-    if (dto.dueDate !== undefined) updateData.dueDate = new Date(dto.dueDate);
-    if (dto.notes !== undefined) updateData.notes = dto.notes;
-    if (dto.paid !== undefined) {
-      updateData.paidAt = dto.paid ? new Date() : null;
-    }
-
-    const updated = await this.paymentModel.findByIdAndUpdate(
-      paymentId,
-      updateData,
-      { new: true },
-    );
-    return updated!;
-  }
-
-  async deletePayment(
-    paymentId: string,
-    weddingId: string,
-  ): Promise<void> {
-    const payment = await this.paymentModel.findById(paymentId);
-    if (!payment) throw new NotFoundException('Pago no encontrado');
-    if (payment.weddingId.toString() !== weddingId) {
-      throw new ForbiddenException();
-    }
-    await this.paymentModel.findByIdAndDelete(paymentId);
+    return result.sort((a, b) => a.dueDate.localeCompare(b.dueDate));
   }
 
   // --- Response mappers ---
@@ -242,27 +205,39 @@ export class BudgetService {
     };
   }
 
-  paymentToResponse(payment: PaymentSchedule) {
-    return {
-      id: payment._id.toString(),
-      categoryId: payment.categoryId?.toString() ?? null,
-      vendorName: payment.vendorName,
-      concept: payment.concept,
-      amount: payment.amount,
-      dueDate: payment.dueDate.toISOString().split('T')[0],
-      paid: !!payment.paidAt,
-      notes: payment.notes,
-    };
-  }
-
   async getUpcomingPayments(weddingId: string, limit = 5) {
-    const payments = await this.paymentModel
-      .find({
-        weddingId: new Types.ObjectId(weddingId),
-        paidAt: null,
-      })
-      .sort({ dueDate: 1 })
-      .limit(limit);
-    return payments.map((p) => this.paymentToResponse(p));
+    const categories = await this.findCategories(weddingId);
+
+    const items: Array<{
+      id: string;
+      vendorName: string;
+      concept: string;
+      amount: number;
+      dueDate: string;
+      paid: boolean;
+      notes: string | null;
+    }> = [];
+
+    for (const cat of categories) {
+      for (const item of cat.items as any[]) {
+        if (!item.dueDate) continue;
+        const isPaid = item.actual > 0 && item.paid >= item.actual;
+        if (isPaid) continue;
+        items.push({
+          id: item._id.toString(),
+          vendorName: cat.name,
+          concept: item.concept,
+          amount: item.actual > 0 ? item.actual : item.estimated,
+          dueDate: new Date(item.dueDate).toISOString().split('T')[0],
+          paid: false,
+          notes: item.notes ?? null,
+        });
+      }
+    }
+
+    items.sort(
+      (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime(),
+    );
+    return items.slice(0, limit);
   }
 }

@@ -86,7 +86,8 @@ export class TaskService {
   }
 
   async getUpcoming(weddingId: string, limit = 5): Promise<Task[]> {
-    return this.taskModel
+    // Tasks with dueDate first (soonest), then without dueDate by template order
+    const withDate = await this.taskModel
       .find({
         weddingId: new Types.ObjectId(weddingId),
         status: { $ne: TaskStatus.DONE },
@@ -94,6 +95,19 @@ export class TaskService {
       })
       .sort({ dueDate: 1 })
       .limit(limit);
+
+    if (withDate.length >= limit) return withDate;
+
+    const withoutDate = await this.taskModel
+      .find({
+        weddingId: new Types.ObjectId(weddingId),
+        status: { $ne: TaskStatus.DONE },
+        dueDate: null,
+      })
+      .sort({ order: 1 })
+      .limit(limit - withDate.length);
+
+    return [...withDate, ...withoutDate];
   }
 
   async getProgress(weddingId: string) {
