@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
+import * as bodyParser from 'body-parser';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -12,6 +13,10 @@ async function bootstrap() {
   const config = app.get(ConfigService);
 
   app.setGlobalPrefix('api');
+
+  // Aumentar el límite de tamaño del body para permitir imágenes base64 en notas
+  app.use(bodyParser.json({ limit: '50mb' }));
+  app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
   app.useGlobalPipes(
     new ValidationPipe({
