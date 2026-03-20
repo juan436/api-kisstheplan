@@ -20,8 +20,14 @@ if (!existsSync(UPLOADS_DIR)) {
   mkdirSync(UPLOADS_DIR, { recursive: true });
 }
 
-const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-const MAX_SIZE_MB = 5;
+const ALLOWED_MIME = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'application/pdf', // Permitir PDFs
+];
+const MAX_SIZE_MB = 10; // Aumentar a 10MB para PDFs
 
 @ApiTags('Uploads')
 @Controller('uploads')
@@ -44,7 +50,7 @@ export class UploadController {
         if (ALLOWED_MIME.includes(file.mimetype)) {
           cb(null, true);
         } else {
-          cb(new BadRequestException('Solo se permiten imágenes (jpg, png, webp, gif)'), false);
+          cb(new BadRequestException('Solo se permiten imágenes (jpg, png, webp, gif) y PDFs'), false);
         }
       },
     }),
@@ -52,7 +58,13 @@ export class UploadController {
   uploadPhoto(@UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('No se recibió ningún archivo');
 
-    const url = `/uploads/photos/${file.filename}`;
+    // En producción, usar URL absoluta con el dominio
+    const baseUrl = process.env.API_BASE_URL;
+    const relativeUrl = `/uploads/photos/${file.filename}`;
+
+    // Si hay API_BASE_URL configurado, devolver URL absoluta
+    const url = baseUrl ? `${baseUrl}${relativeUrl}` : relativeUrl;
+
     return { url };
   }
 }

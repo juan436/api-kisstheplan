@@ -49,6 +49,12 @@ export class SeatingPlan extends Document {
 
   @Prop({ type: [TableSeatSchema], default: [] })
   tables: TableSeat[];
+
+  @Prop({ default: null })
+  backgroundImageUrl?: string;
+
+  @Prop({ default: null })
+  scaleFactor?: number;
 }
 
 export const SeatingPlanSchema = SchemaFactory.createForClass(SeatingPlan);

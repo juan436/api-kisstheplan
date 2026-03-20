@@ -27,9 +27,14 @@ export class SeatingService {
   }
 
   async updatePlan(id: string, weddingId: string, dto: UpdatePlanDto) {
+    const updateFields: any = {};
+    if (dto.name !== undefined) updateFields.name = dto.name;
+    if (dto.backgroundImageUrl !== undefined) updateFields.backgroundImageUrl = dto.backgroundImageUrl;
+    if (dto.scaleFactor !== undefined) updateFields.scaleFactor = dto.scaleFactor;
+
     const plan = await this.planModel.findOneAndUpdate(
       { _id: new Types.ObjectId(id), weddingId: new Types.ObjectId(weddingId) },
-      { $set: { name: dto.name } },
+      { $set: updateFields },
       { new: true },
     );
     if (!plan) throw new NotFoundException('Plan de mesas no encontrado');
@@ -147,6 +152,8 @@ export class SeatingService {
     return {
       id: p._id.toString(),
       name: plan.name,
+      backgroundImageUrl: plan.backgroundImageUrl || undefined,
+      scaleFactor: plan.scaleFactor || undefined,
       tables: (plan.tables || []).map((t) => ({
         id: t._id.toString(),
         name: t.name,
