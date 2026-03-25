@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Note } from './schemas/note.schema';
@@ -8,31 +8,22 @@ import { CreateNoteDto, UpdateNoteDto, AddColorDto, AddCategoryDto, AddImageDto 
 export class NotesService {
   constructor(@InjectModel(Note.name) private noteModel: Model<Note>) {}
 
-  private validateWeddingId(weddingId: string | null) {
-    if (!weddingId) {
-      throw new BadRequestException('Debes crear tu boda primero antes de usar las notas');
-    }
+  async findAll(weddingId: string) {
+    return this.noteModel.find({ weddingId: new Types.ObjectId(weddingId) }).sort({ createdAt: -1 });
   }
 
-  async findAll(weddingId: string | null) {
-    this.validateWeddingId(weddingId);
-    return this.noteModel.find({ weddingId: new Types.ObjectId(weddingId!) }).sort({ createdAt: -1 });
-  }
-
-  async findOne(id: string, weddingId: string | null) {
-    this.validateWeddingId(weddingId);
+  async findOne(id: string, weddingId: string) {
     const note = await this.noteModel.findOne({
       _id: new Types.ObjectId(id),
-      weddingId: new Types.ObjectId(weddingId!),
+      weddingId: new Types.ObjectId(weddingId),
     });
     if (!note) throw new NotFoundException('Nota no encontrada');
     return note;
   }
 
-  async create(weddingId: string | null, dto: CreateNoteDto) {
-    this.validateWeddingId(weddingId);
+  async create(weddingId: string, dto: CreateNoteDto) {
     return this.noteModel.create({
-      weddingId: new Types.ObjectId(weddingId!),
+      weddingId: new Types.ObjectId(weddingId),
       type: dto.type,
       title: dto.title,
       vendorId: dto.vendorId ? new Types.ObjectId(dto.vendorId) : null,
@@ -46,10 +37,9 @@ export class NotesService {
     });
   }
 
-  async update(id: string, weddingId: string | null, dto: UpdateNoteDto) {
-    this.validateWeddingId(weddingId);
+  async update(id: string, weddingId: string, dto: UpdateNoteDto) {
     const note = await this.noteModel.findOneAndUpdate(
-      { _id: new Types.ObjectId(id), weddingId: new Types.ObjectId(weddingId!) },
+      { _id: new Types.ObjectId(id), weddingId: new Types.ObjectId(weddingId) },
       { $set: dto },
       { new: true },
     );
@@ -57,18 +47,17 @@ export class NotesService {
     return note;
   }
 
-  async delete(id: string, weddingId: string | null) {
-    this.validateWeddingId(weddingId);
+  async delete(id: string, weddingId: string) {
     const result = await this.noteModel.deleteOne({
       _id: new Types.ObjectId(id),
-      weddingId: new Types.ObjectId(weddingId!),
+      weddingId: new Types.ObjectId(weddingId),
     });
     if (result.deletedCount === 0) throw new NotFoundException('Nota no encontrada');
   }
 
   // ─── Color Palette ───────────────────────────────────────────────────────────
 
-  async addColor(noteId: string, weddingId: string | null, dto: AddColorDto) {
+  async addColor(noteId: string, weddingId: string, dto: AddColorDto) {
     const note = await this.findOne(noteId, weddingId);
     note.colorPalette.push({
       _id: new Types.ObjectId(),
@@ -80,7 +69,7 @@ export class NotesService {
     return note;
   }
 
-  async removeColor(noteId: string, colorId: string, weddingId: string | null) {
+  async removeColor(noteId: string, colorId: string, weddingId: string) {
     const note = await this.findOne(noteId, weddingId);
     note.colorPalette = note.colorPalette.filter((c) => c._id.toString() !== colorId) as any;
     await note.save();
@@ -89,7 +78,7 @@ export class NotesService {
 
   // ─── Moodboard Categories ────────────────────────────────────────────────────
 
-  async addCategory(noteId: string, weddingId: string | null, dto: AddCategoryDto) {
+  async addCategory(noteId: string, weddingId: string, dto: AddCategoryDto) {
     const note = await this.findOne(noteId, weddingId);
     note.categories.push({
       _id: new Types.ObjectId(),
@@ -101,14 +90,14 @@ export class NotesService {
     return note;
   }
 
-  async removeCategory(noteId: string, categoryId: string, weddingId: string | null) {
+  async removeCategory(noteId: string, categoryId: string, weddingId: string) {
     const note = await this.findOne(noteId, weddingId);
     note.categories = note.categories.filter((c) => c._id.toString() !== categoryId) as any;
     await note.save();
     return note;
   }
 
-  async addImage(noteId: string, categoryId: string, weddingId: string | null, dto: AddImageDto) {
+  async addImage(noteId: string, categoryId: string, weddingId: string, dto: AddImageDto) {
     const note = await this.findOne(noteId, weddingId);
     const category = note.categories.find((c) => c._id.toString() === categoryId);
     if (!category) throw new NotFoundException('Categoría no encontrada');
@@ -122,7 +111,7 @@ export class NotesService {
     return note;
   }
 
-  async removeImage(noteId: string, categoryId: string, imageId: string, weddingId: string | null) {
+  async removeImage(noteId: string, categoryId: string, imageId: string, weddingId: string) {
     const note = await this.findOne(noteId, weddingId);
     const category = note.categories.find((c) => c._id.toString() === categoryId);
     if (!category) throw new NotFoundException('Categoría no encontrada');
