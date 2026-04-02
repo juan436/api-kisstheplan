@@ -65,6 +65,28 @@ export class Guest extends Document {
 
   @Prop()
   notes?: string;
+
+  @Prop({
+    type: [{
+      rsvpStatus: String,
+      mealChoice: String,
+      allergies: String,
+      transport: Boolean,
+      transportPickupPoint: String,
+      respondedAt: Date,
+      source: String,
+    }],
+    default: [],
+  })
+  rsvpHistory: {
+    rsvpStatus: string;
+    mealChoice?: string;
+    allergies?: string;
+    transport?: boolean;
+    transportPickupPoint?: string;
+    respondedAt: Date;
+    source: string;
+  }[];
 }
 
 export const GuestSchema = SchemaFactory.createForClass(Guest);

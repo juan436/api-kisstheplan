@@ -57,6 +57,9 @@ export class Wedding extends Document {
   @Prop({ type: [String], default: ['Carne', 'Pescado', 'Vegetariano', 'Infantil'] })
   mealOptions: string[];
 
+  @Prop({ type: [String], default: ['Gluten', 'Lactosa', 'Frutos secos', 'Marisco'] })
+  allergyOptions: string[];
+
   @Prop({ type: [String], default: [] })
   transportOptions: string[];
 }

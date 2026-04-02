@@ -96,6 +96,9 @@ export class WeddingService {
       timezone: wedding.timezone || 'Europe/Madrid',
       photoUrl: wedding.photoUrl,
       slug: wedding.slug,
+      mealOptions: wedding.mealOptions || [],
+      allergyOptions: wedding.allergyOptions || [],
+      transportOptions: wedding.transportOptions || [],
     };
   }
 

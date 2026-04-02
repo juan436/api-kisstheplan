@@ -102,5 +102,11 @@ export class UpdateWeddingDto {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
+  allergyOptions?: string[];
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
   transportOptions?: string[];
 }
