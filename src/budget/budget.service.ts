@@ -72,7 +72,14 @@ export class BudgetService {
     const cat = await this.categoryModel.findById(categoryId);
     if (!cat) throw new NotFoundException('Categoría no encontrada');
     if (cat.weddingId.toString() !== weddingId) throw new ForbiddenException();
-    cat.items.push({ concept: dto.concept, estimated: dto.estimated ?? 0, actual: dto.actual ?? 0, paid: dto.paid ?? 0 } as any);
+    cat.items.push({
+      concept: dto.concept,
+      estimated: dto.estimated ?? 0,
+      actual: dto.actual ?? 0,
+      paid: dto.paid ?? 0,
+      ...(dto.vendorId ? { vendorId: new Types.ObjectId(dto.vendorId) } : {}),
+      ...(dto.vendorName ? { vendorName: dto.vendorName } : {}),
+    } as any);
     await cat.save();
     return cat;
   }

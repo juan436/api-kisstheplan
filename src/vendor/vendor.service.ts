@@ -52,33 +52,19 @@ export class VendorService {
     };
   }
 
-  /** For each vendor category, find-or-create a budget category and add an item linked to this vendor. */
-  private async syncBudget(weddingId: string, vendorId: string, vendorName: string, categories: string[]) {
+  /** For each vendor category, find-or-create the budget category (no items created). */
+  private async syncBudget(weddingId: string, categories: string[]) {
     const weddingOid = new Types.ObjectId(weddingId);
-    const vendorOid = new Types.ObjectId(vendorId);
 
     for (const catName of categories) {
-      // Find existing category (case-insensitive)
-      let cat = await this.categoryModel.findOne({
+      const exists = await this.categoryModel.findOne({
         weddingId: weddingOid,
         name: { $regex: new RegExp(`^${catName}$`, 'i') },
       });
-
-      // Create category if it doesn't exist
-      if (!cat) {
+      if (!exists) {
         const count = await this.categoryModel.countDocuments({ weddingId: weddingOid });
-        cat = await this.categoryModel.create({ weddingId: weddingOid, name: catName, order: count });
+        await this.categoryModel.create({ weddingId: weddingOid, name: catName, order: count });
       }
-
-      // Check if an item for this vendor already exists in this category
-      const alreadyLinked = cat.items.some(
-        (item: any) => item.vendorId?.toString() === vendorId,
-      );
-      if (alreadyLinked) continue;
-
-      // Add item linked to vendor
-      cat.items.push({ concept: vendorName, estimated: 0, actual: 0, paid: 0, vendorId: vendorOid, vendorName } as any);
-      await cat.save();
     }
   }
 
@@ -96,7 +82,7 @@ export class VendorService {
       ...dto,
     });
     try {
-      await this.syncBudget(weddingId, vendor._id.toString(), vendor.name, vendor.categories);
+      await this.syncBudget(weddingId, vendor.categories);
     } catch (e) {
       console.error('[VendorService] Budget sync error:', e);
     }
@@ -110,6 +96,13 @@ export class VendorService {
       { new: true },
     );
     if (!vendor) throw new NotFoundException('Vendor not found');
+    if (dto.categories && dto.categories.length > 0) {
+      try {
+        await this.syncBudget(weddingId, dto.categories);
+      } catch (e) {
+        console.error('[VendorService] Budget sync error on update:', e);
+      }
+    }
     return this.toResponse(vendor);
   }
 

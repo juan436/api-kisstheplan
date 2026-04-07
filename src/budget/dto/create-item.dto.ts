@@ -23,4 +23,14 @@ export class CreateItemDto {
   @IsNumber()
   @Min(0)
   paid?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  vendorId?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  vendorName?: string;
 }
