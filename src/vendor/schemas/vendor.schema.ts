@@ -89,6 +89,9 @@ export class Vendor extends Document {
   @Prop({ default: '' })
   notes: string;
 
+  @Prop()
+  totalAmount?: number;
+
   @Prop({ type: [VendorPaymentSchema], default: [] })
   payments: VendorPayment[];
 

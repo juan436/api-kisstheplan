@@ -19,6 +19,12 @@ export class WebPage extends Document {
   @Prop({ default: 'Quicksand' })
   fontBody: string;
 
+  @Prop({ default: '' })
+  heroImage: string;
+
+  @Prop({ type: [String], default: [] })
+  galleryImages: string[];
+
   // RSVP config
   @Prop({ default: true })
   rsvpEnabled: boolean;
@@ -32,6 +38,12 @@ export class WebPage extends Document {
   @Prop({ type: [String], default: [] })
   transportOptions: string[];
 
+  @Prop({ default: '' })
+  confirmMessage: string;
+
+  @Prop({ default: '' })
+  rejectMessage: string;
+
   // Content
   @Prop({ default: '' })
   heroTitle: string;
@@ -40,25 +52,46 @@ export class WebPage extends Document {
   heroSubtitle: string;
 
   @Prop({ default: '' })
+  storyTitle: string;
+
+  @Prop({ default: '' })
   storyText: string;
+
+  @Prop({ default: '' })
+  scheduleTitle: string;
 
   @Prop({ default: '' })
   scheduleText: string;
 
   @Prop({ default: '' })
+  locationTitle: string;
+
+  @Prop({ default: '' })
   locationText: string;
+
+  @Prop({ default: '' })
+  transportTitle: string;
 
   @Prop({ default: '' })
   transportText: string;
 
   @Prop({ default: '' })
+  accommodationTitle: string;
+
+  @Prop({ default: '' })
   accommodationText: string;
+
+  @Prop({ default: '' })
+  dressCodeTitle: string;
 
   @Prop({ default: '' })
   dressCode: string;
 
   @Prop({ type: [Object], default: [] })
   customSections: Array<{ title: string; content: string }>;
+
+  @Prop({ type: Object, default: {} })
+  visibleSections: Record<string, boolean>;
 
   // Publish
   @Prop({ default: false })

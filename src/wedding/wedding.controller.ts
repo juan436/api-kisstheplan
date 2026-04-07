@@ -74,6 +74,13 @@ export class WeddingController {
     return this.weddingService.toResponse(wedding);
   }
 
+  @Get('check-slug/:slug')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async checkSlug(@Param('slug') slug: string, @CurrentUser('id') userId: string) {
+    return this.weddingService.checkSlug(slug, userId);
+  }
+
   @Get('slug/:slug')
   async getBySlug(@Param('slug') slug: string) {
     const wedding = await this.weddingService.findBySlug(slug);

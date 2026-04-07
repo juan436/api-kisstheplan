@@ -102,6 +102,16 @@ export class WeddingService {
     };
   }
 
+  async checkSlug(slug: string, userId: string): Promise<{ available: boolean }> {
+    const cleaned = slug.toLowerCase().replace(/[^a-z0-9-]/g, '');
+    const userWedding = await this.weddingModel.findOne({ userId }).lean();
+    const conflict = await this.weddingModel.findOne({
+      slug: cleaned,
+      ...(userWedding ? { _id: { $ne: (userWedding as any)._id } } : {}),
+    });
+    return { available: !conflict };
+  }
+
   private async ensureUniqueSlug(baseSlug: string): Promise<string> {
     let slug = baseSlug;
     let counter = 2;

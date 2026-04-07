@@ -14,4 +14,5 @@ export class UpdateVendorDto {
   @IsOptional() @IsNumber() staffCount?: number;
   @IsOptional() @IsString() staffAllergies?: string;
   @IsOptional() @IsString() notes?: string;
+  @IsOptional() @IsNumber() totalAmount?: number;
 }

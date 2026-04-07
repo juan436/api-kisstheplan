@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Vendor } from './schemas/vendor.schema';
+import { ExpenseCategory } from '../budget/schemas/expense-category.schema';
 import { CreateVendorDto } from './dto/create-vendor.dto';
 import { UpdateVendorDto } from './dto/update-vendor.dto';
 import { CreateVendorPaymentDto, UpdateVendorPaymentDto } from './dto/vendor-payment.dto';
@@ -11,6 +12,7 @@ import { CreateVendorActivityDto } from './dto/vendor-activity.dto';
 export class VendorService {
   constructor(
     @InjectModel(Vendor.name) private vendorModel: Model<Vendor>,
+    @InjectModel(ExpenseCategory.name) private categoryModel: Model<ExpenseCategory>,
   ) {}
 
   private toResponse(vendor: Vendor) {
@@ -30,6 +32,7 @@ export class VendorService {
       staffCount: obj.staffCount,
       staffAllergies: obj.staffAllergies,
       notes: obj.notes,
+      totalAmount: obj.totalAmount,
       payments: (obj.payments || []).map((p: any) => ({
         id: p._id.toString(),
         amount: p.amount,
@@ -49,6 +52,36 @@ export class VendorService {
     };
   }
 
+  /** For each vendor category, find-or-create a budget category and add an item linked to this vendor. */
+  private async syncBudget(weddingId: string, vendorId: string, vendorName: string, categories: string[]) {
+    const weddingOid = new Types.ObjectId(weddingId);
+    const vendorOid = new Types.ObjectId(vendorId);
+
+    for (const catName of categories) {
+      // Find existing category (case-insensitive)
+      let cat = await this.categoryModel.findOne({
+        weddingId: weddingOid,
+        name: { $regex: new RegExp(`^${catName}$`, 'i') },
+      });
+
+      // Create category if it doesn't exist
+      if (!cat) {
+        const count = await this.categoryModel.countDocuments({ weddingId: weddingOid });
+        cat = await this.categoryModel.create({ weddingId: weddingOid, name: catName, order: count });
+      }
+
+      // Check if an item for this vendor already exists in this category
+      const alreadyLinked = cat.items.some(
+        (item: any) => item.vendorId?.toString() === vendorId,
+      );
+      if (alreadyLinked) continue;
+
+      // Add item linked to vendor
+      cat.items.push({ concept: vendorName, estimated: 0, actual: 0, paid: 0, vendorId: vendorOid, vendorName } as any);
+      await cat.save();
+    }
+  }
+
   async findAll(weddingId: string) {
     const vendors = await this.vendorModel
       .find({ weddingId: new Types.ObjectId(weddingId) })
@@ -62,6 +95,11 @@ export class VendorService {
       weddingId: new Types.ObjectId(weddingId),
       ...dto,
     });
+    try {
+      await this.syncBudget(weddingId, vendor._id.toString(), vendor.name, vendor.categories);
+    } catch (e) {
+      console.error('[VendorService] Budget sync error:', e);
+    }
     return this.toResponse(vendor);
   }
 
