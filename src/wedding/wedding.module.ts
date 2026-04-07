@@ -4,10 +4,14 @@ import { Wedding, WeddingSchema } from './schemas/wedding.schema';
 import { WeddingController } from './wedding.controller';
 import { WeddingService } from './wedding.service';
 import { TaskModule } from '../task/task.module';
+import { ExpenseCategory, ExpenseCategorySchema } from '../budget/schemas/expense-category.schema';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Wedding.name, schema: WeddingSchema }]),
+    MongooseModule.forFeature([
+      { name: Wedding.name, schema: WeddingSchema },
+      { name: ExpenseCategory.name, schema: ExpenseCategorySchema },
+    ]),
     forwardRef(() => TaskModule),
   ],
   controllers: [WeddingController],

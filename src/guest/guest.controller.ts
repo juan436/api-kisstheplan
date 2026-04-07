@@ -87,6 +87,15 @@ export class GuestController {
     return this.guestService.getStats(wedding._id.toString());
   }
 
+  @Get(':id/history')
+  async getHistory(
+    @CurrentUser('id') userId: string,
+    @Param('id') guestId: string,
+  ) {
+    const wedding = await this.weddingService.findByUserId(userId);
+    return this.guestService.getHistory(guestId, wedding._id.toString());
+  }
+
   // --- Guest Groups ---
 
   @Get('groups')

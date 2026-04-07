@@ -76,5 +76,20 @@ export class UpdateGuestDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
+  address?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
   notes?: string;
+
+  @ApiProperty({ required: false, enum: ['ADMIN_PANEL', 'GUEST_WEB'] })
+  @IsOptional()
+  @IsString()
+  _source?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  _changedBy?: string;
 }

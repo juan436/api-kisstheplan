@@ -4,6 +4,10 @@ import {
   ExpenseCategory,
   ExpenseCategorySchema,
 } from './schemas/expense-category.schema';
+import {
+  PaymentSchedule,
+  PaymentScheduleSchema,
+} from './schemas/payment-schedule.schema';
 import { BudgetController } from './budget.controller';
 import { BudgetService } from './budget.service';
 import { WeddingModule } from '../wedding/wedding.module';
@@ -12,6 +16,7 @@ import { WeddingModule } from '../wedding/wedding.module';
   imports: [
     MongooseModule.forFeature([
       { name: ExpenseCategory.name, schema: ExpenseCategorySchema },
+      { name: PaymentSchedule.name, schema: PaymentScheduleSchema },
     ]),
     WeddingModule,
   ],

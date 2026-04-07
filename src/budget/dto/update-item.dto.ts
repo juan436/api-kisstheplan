@@ -34,4 +34,14 @@ export class UpdateItemDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  vendorId?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  vendorName?: string;
 }

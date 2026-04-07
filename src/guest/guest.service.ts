@@ -56,19 +56,52 @@ export class GuestService {
   ): Promise<Guest> {
     const guest = await this.guestModel.findById(guestId);
     if (!guest) throw new NotFoundException('Invitado no encontrado');
-    if (guest.weddingId.toString() !== weddingId) {
-      throw new ForbiddenException();
+    if (guest.weddingId.toString() !== weddingId) throw new ForbiddenException();
+
+    const { _source = 'ADMIN_PANEL', _changedBy, ...fields } = dto as UpdateGuestDto & { _source?: string; _changedBy?: string };
+    const setData: Record<string, unknown> = { ...fields };
+    if (fields.groupId) setData.groupId = new Types.ObjectId(fields.groupId);
+
+    const trackable = ['firstName', 'lastName', 'email', 'rsvpStatus', 'mealChoice',
+      'allergies', 'transport', 'transportPickupPoint', 'listName', 'role', 'notes', 'address'];
+    const changes: { field: string; oldValue: unknown; newValue: unknown }[] = [];
+    for (const field of trackable) {
+      if (field in setData && (guest as unknown as Record<string, unknown>)[field] !== setData[field]) {
+        changes.push({ field, oldValue: (guest as unknown as Record<string, unknown>)[field], newValue: setData[field] });
+      }
     }
 
-    const updateData: Record<string, unknown> = { ...dto };
-    if (dto.groupId) updateData.groupId = new Types.ObjectId(dto.groupId);
+    const auditEntry = {
+      id: new Types.ObjectId().toString(),
+      timestamp: new Date(),
+      source: _source,
+      changedBy: _changedBy,
+      changes,
+    };
 
     const updated = await this.guestModel.findByIdAndUpdate(
       guestId,
-      updateData,
+      { $set: setData, $push: { auditLog: auditEntry } },
       { new: true },
     );
     return updated!;
+  }
+
+  async getHistory(guestId: string, weddingId: string) {
+    const guest = await this.guestModel.findById(guestId);
+    if (!guest) throw new NotFoundException('Invitado no encontrado');
+    if (guest.weddingId.toString() !== weddingId) throw new ForbiddenException();
+    return {
+      guestId: guest._id.toString(),
+      name: `${guest.firstName} ${guest.lastName}`.trim(),
+      auditLog: (guest.auditLog || []).map((e) => ({
+        id: e.id,
+        timestamp: e.timestamp,
+        source: e.source,
+        changedBy: e.changedBy,
+        changes: e.changes,
+      })),
+    };
   }
 
   async delete(guestId: string, weddingId: string): Promise<void> {
@@ -96,13 +129,17 @@ export class GuestService {
     return {
       id: guest._id.toString(),
       name: `${guest.firstName} ${guest.lastName}`.trim(),
+      lastName: guest.lastName || '',
       email: guest.email || '',
       phone: guest.phone,
+      address: guest.address,
       groupId: guest.groupId?.toString() || '',
+      listName: guest.listName || 'A',
       rsvp: guest.rsvpStatus,
       dish: guest.mealChoice || '',
       allergies: guest.allergies || '',
       transport: guest.transport,
+      transportPickupPoint: guest.transportPickupPoint,
       plusOne: guest.plusOne,
       role: guest.role || '',
       notes: guest.notes,

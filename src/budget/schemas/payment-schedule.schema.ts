@@ -12,6 +12,9 @@ export class PaymentSchedule extends Document {
   @Prop({ type: Types.ObjectId, ref: 'Vendor' })
   vendorId?: Types.ObjectId;
 
+  @Prop({ type: Types.ObjectId })
+  itemId?: Types.ObjectId;
+
   @Prop({ trim: true, default: '' })
   vendorName: string;
 

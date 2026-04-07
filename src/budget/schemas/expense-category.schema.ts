@@ -22,6 +22,12 @@ export class ExpenseItem {
 
   @Prop({ trim: true })
   notes?: string;
+
+  @Prop({ type: Types.ObjectId, ref: 'Vendor', default: null })
+  vendorId?: Types.ObjectId;
+
+  @Prop({ trim: true, default: null })
+  vendorName?: string;
 }
 
 export const ExpenseItemSchema = SchemaFactory.createForClass(ExpenseItem);

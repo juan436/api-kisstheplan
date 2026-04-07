@@ -87,6 +87,24 @@ export class Guest extends Document {
     respondedAt: Date;
     source: string;
   }[];
+
+  @Prop({
+    type: [{
+      id: String,
+      timestamp: Date,
+      source: String,
+      changedBy: String,
+      changes: [{ field: String, oldValue: Object, newValue: Object }],
+    }],
+    default: [],
+  })
+  auditLog: {
+    id: string;
+    timestamp: Date;
+    source: 'GUEST_WEB' | 'ADMIN_PANEL';
+    changedBy?: string;
+    changes: { field: string; oldValue: unknown; newValue: unknown }[];
+  }[];
 }
 
 export const GuestSchema = SchemaFactory.createForClass(Guest);

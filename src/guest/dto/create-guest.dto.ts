@@ -75,5 +75,10 @@ export class CreateGuestDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
+  address?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
   notes?: string;
 }
