@@ -1,6 +1,32 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
+@Schema({ _id: false })
+export class DecorationObject {
+  @Prop({ required: true })
+  id: string;
+
+  @Prop({ required: true })
+  type: string;
+
+  @Prop({ default: 0 })
+  posX: number;
+
+  @Prop({ default: 0 })
+  posY: number;
+
+  @Prop({ default: null })
+  label?: string;
+
+  @Prop({ default: null })
+  physicalWidth?: number;
+
+  @Prop({ default: null })
+  physicalHeight?: number;
+}
+
+export const DecorationObjectSchema = SchemaFactory.createForClass(DecorationObject);
+
 @Schema({ _id: true })
 export class SeatAssignment {
   _id: Types.ObjectId;
@@ -55,6 +81,9 @@ export class SeatingPlan extends Document {
 
   @Prop({ default: null })
   scaleFactor?: number;
+
+  @Prop({ type: [DecorationObjectSchema], default: [] })
+  decorations: DecorationObject[];
 }
 
 export const SeatingPlanSchema = SchemaFactory.createForClass(SeatingPlan);

@@ -1,4 +1,4 @@
-import { IsString, IsOptional, MinLength, IsNumber } from 'class-validator';
+import { IsString, IsOptional, MinLength, IsNumber, IsArray } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdatePlanDto {
@@ -17,4 +17,17 @@ export class UpdatePlanDto {
   @IsOptional()
   @IsNumber()
   scaleFactor?: number;
+
+  @ApiPropertyOptional({ type: [Object] })
+  @IsOptional()
+  @IsArray()
+  decorations?: Array<{
+    id: string;
+    type: string;
+    posX: number;
+    posY: number;
+    label?: string;
+    physicalWidth?: number;
+    physicalHeight?: number;
+  }>;
 }

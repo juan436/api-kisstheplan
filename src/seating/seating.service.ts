@@ -31,6 +31,7 @@ export class SeatingService {
     if (dto.name !== undefined) updateFields.name = dto.name;
     if (dto.backgroundImageUrl !== undefined) updateFields.backgroundImageUrl = dto.backgroundImageUrl;
     if (dto.scaleFactor !== undefined) updateFields.scaleFactor = dto.scaleFactor;
+    if (dto.decorations !== undefined) updateFields.decorations = dto.decorations;
 
     const plan = await this.planModel.findOneAndUpdate(
       { _id: new Types.ObjectId(id), weddingId: new Types.ObjectId(weddingId) },
@@ -154,6 +155,15 @@ export class SeatingService {
       name: plan.name,
       backgroundImageUrl: plan.backgroundImageUrl || undefined,
       scaleFactor: plan.scaleFactor || undefined,
+      decorations: (plan.decorations || []).map((d) => ({
+        id: d.id,
+        type: d.type,
+        posX: d.posX,
+        posY: d.posY,
+        label: d.label || undefined,
+        physicalWidth: d.physicalWidth || undefined,
+        physicalHeight: d.physicalHeight || undefined,
+      })),
       tables: (plan.tables || []).map((t) => ({
         id: t._id.toString(),
         name: t.name,
