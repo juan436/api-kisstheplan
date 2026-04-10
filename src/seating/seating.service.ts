@@ -32,6 +32,7 @@ export class SeatingService {
     if (dto.backgroundImageUrl !== undefined) updateFields.backgroundImageUrl = dto.backgroundImageUrl;
     if (dto.scaleFactor !== undefined) updateFields.scaleFactor = dto.scaleFactor;
     if (dto.decorations !== undefined) updateFields.decorations = dto.decorations;
+    if (dto.zones !== undefined) updateFields.zones = dto.zones;
 
     const plan = await this.planModel.findOneAndUpdate(
       { _id: new Types.ObjectId(id), weddingId: new Types.ObjectId(weddingId) },
@@ -93,6 +94,10 @@ export class SeatingService {
     if (dto.shape !== undefined) table.shape = dto.shape;
     if (dto.posX !== undefined) table.posX = dto.posX;
     if (dto.posY !== undefined) table.posY = dto.posY;
+    if (dto.rotation !== undefined) (table as any).rotation = dto.rotation;
+    if (dto.physicalDiameter !== undefined) (table as any).physicalDiameter = dto.physicalDiameter;
+    if (dto.physicalWidth !== undefined) (table as any).physicalWidth = dto.physicalWidth;
+    if (dto.physicalHeight !== undefined) (table as any).physicalHeight = dto.physicalHeight;
 
     // If capacity changed, rebuild assignments preserving existing ones
     if (dto.capacity !== undefined && dto.capacity !== table.capacity) {
@@ -155,7 +160,7 @@ export class SeatingService {
       name: plan.name,
       backgroundImageUrl: plan.backgroundImageUrl || undefined,
       scaleFactor: plan.scaleFactor || undefined,
-      decorations: (plan.decorations || []).map((d) => ({
+      decorations: (plan.decorations || []).map((d: any) => ({
         id: d.id,
         type: d.type,
         posX: d.posX,
@@ -163,6 +168,13 @@ export class SeatingService {
         label: d.label || undefined,
         physicalWidth: d.physicalWidth || undefined,
         physicalHeight: d.physicalHeight || undefined,
+      })),
+      zones: ((plan as any).zones || []).map((z: any) => ({
+        id: z.id,
+        points: z.points,
+        physicalWidth: z.physicalWidth,
+        physicalHeight: z.physicalHeight,
+        localScale: z.localScale,
       })),
       tables: (plan.tables || []).map((t) => ({
         id: t._id.toString(),
@@ -172,6 +184,10 @@ export class SeatingService {
         capacity: t.capacity,
         posX: t.posX,
         posY: t.posY,
+        rotation: (t as any).rotation ?? 0,
+        physicalDiameter: (t as any).physicalDiameter ?? undefined,
+        physicalWidth: (t as any).physicalWidth ?? undefined,
+        physicalHeight: (t as any).physicalHeight ?? undefined,
         assignments: (t.assignments || []).map((a) => ({
           seatNumber: a.seatNumber,
           guestId: a.guestId ? a.guestId.toString() : undefined,

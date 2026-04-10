@@ -65,6 +65,26 @@ export class UpdateTableDto {
   @IsNumber()
   posY?: number;
 
+  @ApiPropertyOptional({ description: 'Rotación en grados (0 | 90 | 180 | 270)' })
+  @IsOptional()
+  @IsNumber()
+  rotation?: number;
+
+  @ApiPropertyOptional({ description: 'Diámetro físico en metros (mesas redondas)' })
+  @IsOptional()
+  @IsNumber()
+  physicalDiameter?: number;
+
+  @ApiPropertyOptional({ description: 'Ancho físico en metros (mesas rectangulares)' })
+  @IsOptional()
+  @IsNumber()
+  physicalWidth?: number;
+
+  @ApiPropertyOptional({ description: 'Alto físico en metros (mesas rectangulares)' })
+  @IsOptional()
+  @IsNumber()
+  physicalHeight?: number;
+
   @ApiPropertyOptional({ type: [SeatAssignmentDto] })
   @IsOptional()
   @IsArray()

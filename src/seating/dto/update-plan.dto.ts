@@ -30,4 +30,15 @@ export class UpdatePlanDto {
     physicalWidth?: number;
     physicalHeight?: number;
   }>;
+
+  @ApiPropertyOptional({ type: [Object], description: 'Zonas de calibración de escala local (4 puntos + dimensiones físicas)' })
+  @IsOptional()
+  @IsArray()
+  zones?: Array<{
+    id: string;
+    points: { x: number; y: number }[];
+    physicalWidth: number;
+    physicalHeight: number;
+    localScale: number;
+  }>;
 }
