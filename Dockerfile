@@ -1,7 +1,7 @@
 # ============================================================
 # Stage 1: Builder — instala deps y compila TypeScript
 # ============================================================
-FROM node:22-alpine AS builder
+FROM node:20.19.0-alpine AS builder
 
 # Instalar pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
@@ -25,7 +25,7 @@ RUN pnpm run build
 # ============================================================
 # Stage 2: Production — imagen mínima, solo lo necesario
 # ============================================================
-FROM node:22-alpine AS production
+FROM node:20.19.0-alpine AS production
 
 # Instalar pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
