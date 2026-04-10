@@ -29,6 +29,7 @@ export class UpdatePlanDto {
     label?: string;
     physicalWidth?: number;
     physicalHeight?: number;
+    customEmoji?: string;
   }>;
 
   @ApiPropertyOptional({ type: [Object], description: 'Zonas de calibración de escala local (4 puntos + dimensiones físicas)' })
@@ -40,5 +41,16 @@ export class UpdatePlanDto {
     physicalWidth: number;
     physicalHeight: number;
     localScale: number;
+  }>;
+
+  @ApiPropertyOptional({ type: [Object], description: 'Biblioteca de emojis personalizados del plan' })
+  @IsOptional()
+  @IsArray()
+  customEmojis?: Array<{
+    id: string;
+    emoji: string;
+    label: string;
+    physicalWidth: number;
+    physicalHeight: number;
   }>;
 }

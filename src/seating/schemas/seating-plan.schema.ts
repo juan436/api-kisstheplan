@@ -44,9 +44,25 @@ export class DecorationObject {
 
   @Prop({ default: null })
   physicalHeight?: number;
+
+  /** Emoji character for custom_emoji decoration type */
+  @Prop({ default: null })
+  customEmoji?: string;
 }
 
 export const DecorationObjectSchema = SchemaFactory.createForClass(DecorationObject);
+
+// ── CustomEmoji sub-schema ─────────────────────────────────────────────────────
+
+@Schema({ _id: false })
+export class CustomEmoji {
+  @Prop({ required: true }) id: string;
+  @Prop({ required: true }) emoji: string;
+  @Prop({ required: true }) label: string;
+  @Prop({ required: true }) physicalWidth: number;
+  @Prop({ required: true }) physicalHeight: number;
+}
+export const CustomEmojiSchema = SchemaFactory.createForClass(CustomEmoji);
 
 @Schema({ _id: true })
 export class SeatAssignment {
@@ -120,6 +136,9 @@ export class SeatingPlan extends Document {
 
   @Prop({ type: [CalibZoneSchema], default: [] })
   zones: CalibZone[];
+
+  @Prop({ type: [CustomEmojiSchema], default: [] })
+  customEmojis: CustomEmoji[];
 }
 
 export const SeatingPlanSchema = SchemaFactory.createForClass(SeatingPlan);

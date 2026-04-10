@@ -33,6 +33,7 @@ export class SeatingService {
     if (dto.scaleFactor !== undefined) updateFields.scaleFactor = dto.scaleFactor;
     if (dto.decorations !== undefined) updateFields.decorations = dto.decorations;
     if (dto.zones !== undefined) updateFields.zones = dto.zones;
+    if (dto.customEmojis !== undefined) updateFields.customEmojis = dto.customEmojis;
 
     const plan = await this.planModel.findOneAndUpdate(
       { _id: new Types.ObjectId(id), weddingId: new Types.ObjectId(weddingId) },
@@ -168,6 +169,14 @@ export class SeatingService {
         label: d.label || undefined,
         physicalWidth: d.physicalWidth || undefined,
         physicalHeight: d.physicalHeight || undefined,
+        customEmoji: d.customEmoji || undefined,
+      })),
+      customEmojis: ((plan as any).customEmojis || []).map((e: any) => ({
+        id: e.id,
+        emoji: e.emoji,
+        label: e.label,
+        physicalWidth: e.physicalWidth,
+        physicalHeight: e.physicalHeight,
       })),
       zones: ((plan as any).zones || []).map((z: any) => ({
         id: z.id,
