@@ -18,9 +18,9 @@ export class CreateTableDto {
   @IsString()
   name: string;
 
-  @ApiProperty({ enum: ['round', 'rect'], example: 'round' })
-  @IsEnum(['round', 'rect'])
-  shape: 'round' | 'rect';
+  @ApiProperty({ enum: ['round', 'rect', 'serpentine'], example: 'round' })
+  @IsEnum(['round', 'rect', 'serpentine'])
+  shape: 'round' | 'rect' | 'serpentine';
 
   @ApiProperty({ example: 8 })
   @IsNumber()
@@ -43,10 +43,10 @@ export class UpdateTableDto {
   @IsString()
   name?: string;
 
-  @ApiPropertyOptional({ enum: ['round', 'rect'] })
+  @ApiPropertyOptional({ enum: ['round', 'rect', 'serpentine'] })
   @IsOptional()
-  @IsEnum(['round', 'rect'])
-  shape?: 'round' | 'rect';
+  @IsEnum(['round', 'rect', 'serpentine'])
+  shape?: 'round' | 'rect' | 'serpentine';
 
   @ApiPropertyOptional()
   @IsOptional()

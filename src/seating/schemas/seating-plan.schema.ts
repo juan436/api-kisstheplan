@@ -45,9 +45,17 @@ export class DecorationObject {
   @Prop({ default: null })
   physicalHeight?: number;
 
-  /** Emoji character for custom_emoji decoration type */
+  /** Emoji character for custom_emoji decoration type (legacy) */
   @Prop({ default: null })
   customEmoji?: string;
+
+  /** SVG object key from the library (chair, bench, toldo, etc.) */
+  @Prop({ default: null })
+  objectType?: string;
+
+  /** Assigned guest ID (for functional chair decorations) */
+  @Prop({ default: null })
+  guestId?: string;
 }
 
 export const DecorationObjectSchema = SchemaFactory.createForClass(DecorationObject);
@@ -57,7 +65,8 @@ export const DecorationObjectSchema = SchemaFactory.createForClass(DecorationObj
 @Schema({ _id: false })
 export class CustomEmoji {
   @Prop({ required: true }) id: string;
-  @Prop({ required: true }) emoji: string;
+  @Prop({ default: null }) emoji?: string;        // legacy emoji character
+  @Prop({ default: null }) objectType?: string;   // SVG library key
   @Prop({ required: true }) label: string;
   @Prop({ required: true }) physicalWidth: number;
   @Prop({ required: true }) physicalHeight: number;
@@ -84,8 +93,8 @@ export class TableSeat {
   @Prop({ required: true, trim: true })
   name: string;
 
-  @Prop({ enum: ['round', 'rect'], default: 'round' })
-  shape: 'round' | 'rect';
+  @Prop({ enum: ['round', 'rect', 'serpentine'], default: 'round' })
+  shape: 'round' | 'rect' | 'serpentine';
 
   @Prop({ default: 8 })
   capacity: number;
