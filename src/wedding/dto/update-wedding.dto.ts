@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsArray,
   IsBoolean,
+  IsObject,
   Min,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
@@ -103,6 +104,16 @@ export class UpdateWeddingDto {
   @IsArray()
   @IsString({ each: true })
   allergyOptions?: string[];
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsObject()
+  allergyColors?: Record<string, string>;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsObject()
+  mealColors?: Record<string, string>;
 
   @ApiProperty({ required: false })
   @IsOptional()

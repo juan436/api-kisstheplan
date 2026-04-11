@@ -98,6 +98,8 @@ export class WeddingService {
       slug: wedding.slug,
       mealOptions: wedding.mealOptions || [],
       allergyOptions: wedding.allergyOptions || [],
+      allergyColors: Object.fromEntries(wedding.allergyColors ?? new Map()),
+      mealColors: Object.fromEntries(wedding.mealColors ?? new Map()),
       transportOptions: wedding.transportOptions || [],
     };
   }

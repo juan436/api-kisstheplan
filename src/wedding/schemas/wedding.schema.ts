@@ -60,6 +60,12 @@ export class Wedding extends Document {
   @Prop({ type: [String], default: ['Gluten', 'Lactosa', 'Frutos secos', 'Marisco'] })
   allergyOptions: string[];
 
+  @Prop({ type: Map, of: String, default: {} })
+  allergyColors: Map<string, string>;
+
+  @Prop({ type: Map, of: String, default: {} })
+  mealColors: Map<string, string>;
+
   @Prop({ type: [String], default: [] })
   transportOptions: string[];
 }
