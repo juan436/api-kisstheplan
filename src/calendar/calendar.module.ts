@@ -2,9 +2,9 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Task, TaskSchema } from '../task/schemas/task.schema';
 import {
-  ExpenseCategory,
-  ExpenseCategorySchema,
-} from '../budget/schemas/expense-category.schema';
+  PaymentSchedule,
+  PaymentScheduleSchema,
+} from '../budget/schemas/payment-schedule.schema';
 import { CalendarController } from './calendar.controller';
 import { CalendarService } from './calendar.service';
 import { WeddingModule } from '../wedding/wedding.module';
@@ -13,7 +13,7 @@ import { WeddingModule } from '../wedding/wedding.module';
   imports: [
     MongooseModule.forFeature([
       { name: Task.name, schema: TaskSchema },
-      { name: ExpenseCategory.name, schema: ExpenseCategorySchema },
+      { name: PaymentSchedule.name, schema: PaymentScheduleSchema },
     ]),
     WeddingModule,
   ],

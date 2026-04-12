@@ -78,6 +78,12 @@ export class TaskController {
     return { message: 'Tarea eliminada' };
   }
 
+  @Get('categories')
+  async getCategories(@CurrentUser('id') userId: string) {
+    const wedding = await this.weddingService.findByUserId(userId);
+    return this.taskService.getCategories(wedding._id.toString());
+  }
+
   @Get('upcoming')
   async getUpcoming(@CurrentUser('id') userId: string) {
     const wedding = await this.weddingService.findByUserId(userId);

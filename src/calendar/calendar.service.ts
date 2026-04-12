@@ -2,14 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Task } from '../task/schemas/task.schema';
-import { ExpenseCategory } from '../budget/schemas/expense-category.schema';
+import { PaymentSchedule } from '../budget/schemas/payment-schedule.schema';
 
 @Injectable()
 export class CalendarService {
   constructor(
     @InjectModel(Task.name) private taskModel: Model<Task>,
-    @InjectModel(ExpenseCategory.name)
-    private categoryModel: Model<ExpenseCategory>,
+    @InjectModel(PaymentSchedule.name)
+    private paymentModel: Model<PaymentSchedule>,
   ) {}
 
   async generateIcal(
@@ -19,9 +19,9 @@ export class CalendarService {
   ): Promise<string> {
     const wid = new Types.ObjectId(weddingId);
 
-    const [tasks, categories] = await Promise.all([
+    const [tasks, payments] = await Promise.all([
       this.taskModel.find({ weddingId: wid, dueDate: { $ne: null } }),
-      this.categoryModel.find({ weddingId: wid }),
+      this.paymentModel.find({ weddingId: wid, paidAt: null }),
     ]);
 
     const lines: string[] = [
@@ -42,7 +42,7 @@ export class CalendarService {
       description: 'El gran día',
     }));
 
-    // Task events
+    // Task events — only tasks with a dueDate
     for (const task of tasks) {
       if (!task.dueDate) continue;
       lines.push(...this.buildEvent({
@@ -53,18 +53,17 @@ export class CalendarService {
       }));
     }
 
-    // Payment events from ExpenseItem.dueDate
-    for (const cat of categories) {
-      for (const item of cat.items as any[]) {
-        if (!item.dueDate) continue;
-        const amount = `${(item.actual || item.estimated || 0).toLocaleString('es-ES')} EUR`;
-        lines.push(...this.buildEvent({
-          uid: `item-${item._id.toString()}@kisstheplan.es`,
-          dtstart: this.formatDate(new Date(item.dueDate)),
-          summary: `💶 ${item.concept} — ${amount}`,
-          description: cat.name,
-        }));
-      }
+    // Payment events from PaymentSchedule (unpaid only)
+    for (const payment of payments) {
+      if (!payment.dueDate) continue;
+      const label = payment.vendorName || payment.concept || 'Pago';
+      const amount = `${(payment.amount || 0).toLocaleString('es-ES')} EUR`;
+      lines.push(...this.buildEvent({
+        uid: `payment-${payment._id.toString()}@kisstheplan.es`,
+        dtstart: this.formatDate(payment.dueDate),
+        summary: `💶 ${label} — ${amount}`,
+        description: payment.notes || '',
+      }));
     }
 
     lines.push('END:VCALENDAR');

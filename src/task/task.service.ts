@@ -125,6 +125,14 @@ export class TaskService {
     };
   }
 
+  async getCategories(weddingId: string): Promise<string[]> {
+    const categories = await this.taskModel.distinct('category', {
+      weddingId: new Types.ObjectId(weddingId),
+      category: { $nin: [null, ''] },
+    });
+    return (categories as string[]).filter(Boolean).sort();
+  }
+
   async seedTemplate(weddingId: string): Promise<void> {
     const tasks = defaultTaskTemplate.map((t) => ({
       weddingId: new Types.ObjectId(weddingId),
