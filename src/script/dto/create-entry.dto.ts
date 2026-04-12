@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEnum, IsNumber, IsObject } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsNumber, IsObject, IsBoolean } from 'class-validator';
 
 export class CreateEntryDto {
   @IsEnum(['exact', 'range', 'none'])
@@ -27,4 +27,8 @@ export class CreateEntryDto {
   @IsNumber()
   @IsOptional()
   order?: number;
+
+  @IsBoolean()
+  @IsOptional()
+  isPrivate?: boolean;
 }

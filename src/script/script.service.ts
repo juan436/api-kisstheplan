@@ -132,6 +132,7 @@ export class ScriptService {
       description: entry.description,
       style: entry.style,
       order: entry.order,
+      isPrivate: entry.isPrivate ?? false,
     };
   }
 

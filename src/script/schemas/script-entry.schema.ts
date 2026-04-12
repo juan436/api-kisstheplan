@@ -33,6 +33,9 @@ export class ScriptEntry extends Document {
 
   @Prop({ default: 0 })
   order: number;
+
+  @Prop({ default: false })
+  isPrivate: boolean;
 }
 
 export const ScriptEntrySchema = SchemaFactory.createForClass(ScriptEntry);
