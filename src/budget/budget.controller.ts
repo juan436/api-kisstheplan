@@ -10,115 +10,99 @@ import { UpdateItemDto } from './dto/update-item.dto';
 import { CreateItemPaymentDto } from './dto/create-item-payment.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { WeddingService } from '../wedding/wedding.service';
+import { WeddingGuard } from '../wedding/guards/wedding.guard';
+import { CurrentWeddingId } from '../common/decorators/current-wedding-id.decorator';
 
 @ApiTags('Budget')
 @Controller('budget')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, WeddingGuard)
 @ApiBearerAuth()
 export class BudgetController {
   constructor(
     private categoryService: BudgetCategoryService,
     private paymentService: BudgetPaymentService,
     private summaryService: BudgetSummaryService,
-    private weddingService: WeddingService,
   ) {}
 
   @Get('categories')
-  async getCategories(@CurrentUser('id') userId: string) {
-    const wedding = await this.weddingService.findByUserId(userId);
-    return this.categoryService.findCategoriesWithPaid(wedding._id.toString());
+  async getCategories(@CurrentWeddingId() weddingId: string) {
+    return this.categoryService.findCategoriesWithPaid(weddingId);
   }
 
   @Post('categories')
-  async createCategory(@CurrentUser('id') userId: string, @Body() dto: CreateCategoryDto) {
-    const wedding = await this.weddingService.findByUserId(userId);
-    const cat = await this.categoryService.createCategory(wedding._id.toString(), dto);
+  async createCategory(@CurrentWeddingId() weddingId: string, @Body() dto: CreateCategoryDto) {
+    const cat = await this.categoryService.createCategory(weddingId, dto);
     return this.categoryService.categoryToResponse(cat);
   }
 
   @Patch('categories/:id')
-  async updateCategory(@CurrentUser('id') userId: string, @Param('id') catId: string, @Body() dto: UpdateCategoryDto) {
-    const wedding = await this.weddingService.findByUserId(userId);
-    const cat = await this.categoryService.updateCategory(catId, wedding._id.toString(), dto);
+  async updateCategory(@CurrentWeddingId() weddingId: string, @Param('id') catId: string, @Body() dto: UpdateCategoryDto) {
+    const cat = await this.categoryService.updateCategory(catId, weddingId, dto);
     return this.categoryService.categoryToResponse(cat);
   }
 
   @Delete('categories/:id')
-  async deleteCategory(@CurrentUser('id') userId: string, @Param('id') catId: string) {
-    const wedding = await this.weddingService.findByUserId(userId);
-    await this.categoryService.deleteCategory(catId, wedding._id.toString());
+  async deleteCategory(@CurrentWeddingId() weddingId: string, @Param('id') catId: string) {
+    await this.categoryService.deleteCategory(catId, weddingId);
     return { message: 'Categoría eliminada' };
   }
 
   @Post('categories/:id/items')
-  async addItem(@CurrentUser('id') userId: string, @Param('id') catId: string, @Body() dto: CreateItemDto) {
-    const wedding = await this.weddingService.findByUserId(userId);
-    const cat = await this.categoryService.addItem(catId, wedding._id.toString(), dto);
+  async addItem(@CurrentWeddingId() weddingId: string, @Param('id') catId: string, @Body() dto: CreateItemDto) {
+    const cat = await this.categoryService.addItem(catId, weddingId, dto);
     return this.categoryService.categoryToResponse(cat);
   }
 
   @Patch('categories/:catId/items/:itemId')
-  async updateItem(@CurrentUser('id') userId: string, @Param('catId') catId: string, @Param('itemId') itemId: string, @Body() dto: UpdateItemDto) {
-    const wedding = await this.weddingService.findByUserId(userId);
-    const cat = await this.categoryService.updateItem(catId, itemId, wedding._id.toString(), dto);
+  async updateItem(@CurrentWeddingId() weddingId: string, @Param('catId') catId: string, @Param('itemId') itemId: string, @Body() dto: UpdateItemDto) {
+    const cat = await this.categoryService.updateItem(catId, itemId, weddingId, dto);
     return this.categoryService.categoryToResponse(cat);
   }
 
   @Delete('categories/:catId/items/:itemId')
-  async deleteItem(@CurrentUser('id') userId: string, @Param('catId') catId: string, @Param('itemId') itemId: string) {
-    const wedding = await this.weddingService.findByUserId(userId);
-    const cat = await this.categoryService.deleteItem(catId, itemId, wedding._id.toString());
+  async deleteItem(@CurrentWeddingId() weddingId: string, @Param('catId') catId: string, @Param('itemId') itemId: string) {
+    const cat = await this.categoryService.deleteItem(catId, itemId, weddingId);
     return this.categoryService.categoryToResponse(cat);
   }
 
   @Get('categories/:catId/items/:itemId/payments')
-  async getItemPayments(@CurrentUser('id') userId: string, @Param('catId') catId: string, @Param('itemId') itemId: string) {
-    const wedding = await this.weddingService.findByUserId(userId);
-    return this.paymentService.getItemPayments(catId, itemId, wedding._id.toString());
+  async getItemPayments(@CurrentWeddingId() weddingId: string, @Param('catId') catId: string, @Param('itemId') itemId: string) {
+    return this.paymentService.getItemPayments(catId, itemId, weddingId);
   }
 
   @Post('categories/:catId/items/:itemId/payments')
-  async createItemPayment(@CurrentUser('id') userId: string, @Param('catId') catId: string, @Param('itemId') itemId: string, @Body() dto: CreateItemPaymentDto) {
-    const wedding = await this.weddingService.findByUserId(userId);
-    return this.paymentService.createItemPayment(catId, itemId, wedding._id.toString(), dto);
+  async createItemPayment(@CurrentWeddingId() weddingId: string, @Param('catId') catId: string, @Param('itemId') itemId: string, @Body() dto: CreateItemPaymentDto) {
+    return this.paymentService.createItemPayment(catId, itemId, weddingId, dto);
   }
 
   @Patch('payments/:paymentId')
-  async updatePayment(@CurrentUser('id') userId: string, @Param('paymentId') paymentId: string, @Body() dto: UpdatePaymentDto) {
-    const wedding = await this.weddingService.findByUserId(userId);
-    return this.paymentService.updatePayment(paymentId, wedding._id.toString(), dto);
+  async updatePayment(@CurrentWeddingId() weddingId: string, @Param('paymentId') paymentId: string, @Body() dto: UpdatePaymentDto) {
+    return this.paymentService.updatePayment(paymentId, weddingId, dto);
   }
 
   @Delete('payments/:paymentId')
-  async deletePayment(@CurrentUser('id') userId: string, @Param('paymentId') paymentId: string) {
-    const wedding = await this.weddingService.findByUserId(userId);
-    await this.paymentService.deletePayment(paymentId, wedding._id.toString());
+  async deletePayment(@CurrentWeddingId() weddingId: string, @Param('paymentId') paymentId: string) {
+    await this.paymentService.deletePayment(paymentId, weddingId);
     return { message: 'Pago eliminado' };
   }
 
   @Get('summary')
-  async getSummary(@CurrentUser('id') userId: string) {
-    const wedding = await this.weddingService.findByUserId(userId);
-    return this.summaryService.getSummary(wedding._id.toString());
+  async getSummary(@CurrentWeddingId() weddingId: string) {
+    return this.summaryService.getSummary(weddingId);
   }
 
   @Get('vendor/:vendorId/payments')
-  async getVendorPayments(@CurrentUser('id') userId: string, @Param('vendorId') vendorId: string) {
-    const wedding = await this.weddingService.findByUserId(userId);
-    return this.paymentService.findPaymentsByVendor(wedding._id.toString(), vendorId);
+  async getVendorPayments(@CurrentWeddingId() weddingId: string, @Param('vendorId') vendorId: string) {
+    return this.paymentService.findPaymentsByVendor(weddingId, vendorId);
   }
 
   @Get('payments/upcoming')
-  async getUpcomingPayments(@CurrentUser('id') userId: string) {
-    const wedding = await this.weddingService.findByUserId(userId);
-    return this.paymentService.getUpcomingPayments(wedding._id.toString(), 5);
+  async getUpcomingPayments(@CurrentWeddingId() weddingId: string) {
+    return this.paymentService.getUpcomingPayments(weddingId, 5);
   }
 
   @Get('payments')
-  async getPayments(@CurrentUser('id') userId: string) {
-    const wedding = await this.weddingService.findByUserId(userId);
-    return this.paymentService.findAllPaymentsForCalendar(wedding._id.toString());
+  async getPayments(@CurrentWeddingId() weddingId: string) {
+    return this.paymentService.findAllPaymentsForCalendar(weddingId);
   }
 }

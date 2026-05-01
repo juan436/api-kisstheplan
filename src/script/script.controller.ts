@@ -15,106 +15,94 @@ import { UpdateEntryDto } from './dto/update-entry.dto';
 import { CreateAreaDto } from './dto/create-area.dto';
 import { ReorderDto } from './dto/reorder.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { WeddingService } from '../wedding/wedding.service';
+import { WeddingGuard } from '../wedding/guards/wedding.guard';
+import { CurrentWeddingId } from '../common/decorators/current-wedding-id.decorator';
 
 @ApiTags('Script')
 @Controller('script')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, WeddingGuard)
 @ApiBearerAuth()
 export class ScriptController {
-  constructor(
-    private scriptService: ScriptService,
-    private weddingService: WeddingService,
-  ) {}
+  constructor(private scriptService: ScriptService) {}
 
   // --- Entries ---
 
   @Get('entries')
-  async getEntries(@CurrentUser('id') userId: string) {
-    const wedding = await this.weddingService.findByUserId(userId);
-    const entries = await this.scriptService.findEntries(wedding._id.toString());
+  async getEntries(@CurrentWeddingId() weddingId: string) {
+    const entries = await this.scriptService.findEntries(weddingId);
     return entries.map((e) => this.scriptService.entryToResponse(e));
   }
 
   @Post('entries')
   async createEntry(
-    @CurrentUser('id') userId: string,
+    @CurrentWeddingId() weddingId: string,
     @Body() dto: CreateEntryDto,
   ) {
-    const wedding = await this.weddingService.findByUserId(userId);
-    const entry = await this.scriptService.createEntry(wedding._id.toString(), dto);
+    const entry = await this.scriptService.createEntry(weddingId, dto);
     return this.scriptService.entryToResponse(entry);
   }
 
   @Patch('entries/reorder')
   async reorderEntries(
-    @CurrentUser('id') userId: string,
+    @CurrentWeddingId() weddingId: string,
     @Body() dto: ReorderDto,
   ) {
-    const wedding = await this.weddingService.findByUserId(userId);
-    const entries = await this.scriptService.reorderEntries(wedding._id.toString(), dto.ids);
+    const entries = await this.scriptService.reorderEntries(weddingId, dto.ids);
     return entries.map((e) => this.scriptService.entryToResponse(e));
   }
 
   @Patch('entries/:id')
   async updateEntry(
-    @CurrentUser('id') userId: string,
+    @CurrentWeddingId() weddingId: string,
     @Param('id') entryId: string,
     @Body() dto: UpdateEntryDto,
   ) {
-    const wedding = await this.weddingService.findByUserId(userId);
-    const entry = await this.scriptService.updateEntry(entryId, wedding._id.toString(), dto);
+    const entry = await this.scriptService.updateEntry(entryId, weddingId, dto);
     return this.scriptService.entryToResponse(entry);
   }
 
   @Delete('entries/:id')
   async deleteEntry(
-    @CurrentUser('id') userId: string,
+    @CurrentWeddingId() weddingId: string,
     @Param('id') entryId: string,
   ) {
-    const wedding = await this.weddingService.findByUserId(userId);
-    await this.scriptService.deleteEntry(entryId, wedding._id.toString());
+    await this.scriptService.deleteEntry(entryId, weddingId);
     return { message: 'Entrada eliminada' };
   }
 
   // --- Areas ---
 
   @Get('areas')
-  async getAreas(@CurrentUser('id') userId: string) {
-    const wedding = await this.weddingService.findByUserId(userId);
-    const areas = await this.scriptService.findAreas(wedding._id.toString());
+  async getAreas(@CurrentWeddingId() weddingId: string) {
+    const areas = await this.scriptService.findAreas(weddingId);
     return areas.map((a) => this.scriptService.areaToResponse(a));
   }
 
   @Post('areas')
   async createArea(
-    @CurrentUser('id') userId: string,
+    @CurrentWeddingId() weddingId: string,
     @Body() dto: CreateAreaDto,
   ) {
-    const wedding = await this.weddingService.findByUserId(userId);
-    const area = await this.scriptService.createArea(wedding._id.toString(), dto);
+    const area = await this.scriptService.createArea(weddingId, dto);
     return this.scriptService.areaToResponse(area);
   }
 
   @Patch('areas/:id')
   async updateArea(
-    @CurrentUser('id') userId: string,
+    @CurrentWeddingId() weddingId: string,
     @Param('id') areaId: string,
     @Body() dto: Partial<CreateAreaDto>,
   ) {
-    const wedding = await this.weddingService.findByUserId(userId);
-    const area = await this.scriptService.updateArea(areaId, wedding._id.toString(), dto);
+    const area = await this.scriptService.updateArea(areaId, weddingId, dto);
     return this.scriptService.areaToResponse(area);
   }
 
   @Delete('areas/:id')
   async deleteArea(
-    @CurrentUser('id') userId: string,
+    @CurrentWeddingId() weddingId: string,
     @Param('id') areaId: string,
   ) {
-    const wedding = await this.weddingService.findByUserId(userId);
-    await this.scriptService.deleteArea(areaId, wedding._id.toString());
+    await this.scriptService.deleteArea(areaId, weddingId);
     return { message: 'Área eliminada' };
   }
 }

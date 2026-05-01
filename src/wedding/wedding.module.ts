@@ -1,4 +1,5 @@
 import { Module, forwardRef } from '@nestjs/common';
+import { WeddingGuard } from './guards/wedding.guard';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Wedding, WeddingSchema } from './schemas/wedding.schema';
 import { WeddingController } from './wedding.controller';
@@ -15,7 +16,7 @@ import { ExpenseCategory, ExpenseCategorySchema } from '../budget/schemas/expens
     forwardRef(() => TaskModule),
   ],
   controllers: [WeddingController],
-  providers: [WeddingService],
-  exports: [WeddingService],
+  providers: [WeddingService, WeddingGuard],
+  exports: [WeddingService, WeddingGuard],
 })
 export class WeddingModule {}
