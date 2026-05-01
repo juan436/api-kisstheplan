@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { WeddingService } from '../wedding/wedding.service';
 import { GuestService } from '../guest/guest.service';
-import { BudgetService } from '../budget/budget.service';
+import { BudgetSummaryService } from '../budget/budget-summary.service';
+import { BudgetPaymentService } from '../budget/budget-payment.service';
 import { TaskService } from '../task/task.service';
 
 @Injectable()
@@ -9,7 +10,8 @@ export class DashboardService {
   constructor(
     private weddingService: WeddingService,
     private guestService: GuestService,
-    private budgetService: BudgetService,
+    private budgetSummaryService: BudgetSummaryService,
+    private budgetPaymentService: BudgetPaymentService,
     private taskService: TaskService,
   ) {}
 
@@ -20,9 +22,9 @@ export class DashboardService {
     const [guestStats, budgetSummary, upcomingTasks, upcomingPayments, taskProgress] =
       await Promise.all([
         this.guestService.getStats(weddingId),
-        this.budgetService.getSummary(weddingId),
+        this.budgetSummaryService.getSummary(weddingId),
         this.taskService.getUpcoming(weddingId, 5),
-        this.budgetService.getUpcomingPayments(weddingId, 3),
+        this.budgetPaymentService.getUpcomingPayments(weddingId, 3),
         this.taskService.getProgress(weddingId),
       ]);
 

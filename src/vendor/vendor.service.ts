@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Vendor } from './schemas/vendor.schema';
+import { Vendor, VendorPayment, VendorActivity } from './schemas/vendor.schema';
 import { ExpenseCategory } from '../budget/schemas/expense-category.schema';
 import { CreateVendorDto } from './dto/create-vendor.dto';
 import { UpdateVendorDto } from './dto/update-vendor.dto';
@@ -33,14 +33,14 @@ export class VendorService {
       staffAllergies: obj.staffAllergies,
       notes: obj.notes,
       totalAmount: obj.totalAmount,
-      payments: (obj.payments || []).map((p: any) => ({
+      payments: (obj.payments || []).map((p: VendorPayment) => ({
         id: p._id.toString(),
         amount: p.amount,
         dueDate: p.dueDate ? (p.dueDate instanceof Date ? p.dueDate.toISOString().split('T')[0] : p.dueDate) : null,
         paid: p.paid,
         notes: p.notes,
       })),
-      activity: (obj.activity || []).map((a: any) => ({
+      activity: (obj.activity || []).map((a: VendorActivity) => ({
         id: a._id.toString(),
         type: a.type,
         content: a.content,
@@ -126,7 +126,7 @@ export class VendorService {
       dueDate: dto.dueDate ? new Date(dto.dueDate) : undefined,
       paid: false,
       notes: dto.notes || '',
-    } as any);
+    } as VendorPayment);
     await vendor.save();
     return this.toResponse(vendor);
   }
@@ -153,7 +153,8 @@ export class VendorService {
       weddingId: new Types.ObjectId(weddingId),
     });
     if (!vendor) throw new NotFoundException('Vendor not found');
-    vendor.payments = vendor.payments.filter((p) => p._id.toString() !== paymentId) as any;
+    const idx = vendor.payments.findIndex((p) => p._id.toString() === paymentId);
+    if (idx !== -1) vendor.payments.splice(idx, 1);
     await vendor.save();
     return this.toResponse(vendor);
   }
@@ -172,7 +173,7 @@ export class VendorService {
       fileName: dto.fileName,
       author: 'Tú',
       createdAt: new Date(),
-    } as any);
+    } as VendorActivity);
     await vendor.save();
     return this.toResponse(vendor);
   }

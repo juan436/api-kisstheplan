@@ -1,15 +1,11 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import {
-  ExpenseCategory,
-  ExpenseCategorySchema,
-} from './schemas/expense-category.schema';
-import {
-  PaymentSchedule,
-  PaymentScheduleSchema,
-} from './schemas/payment-schedule.schema';
+import { ExpenseCategory, ExpenseCategorySchema } from './schemas/expense-category.schema';
+import { PaymentSchedule, PaymentScheduleSchema } from './schemas/payment-schedule.schema';
 import { BudgetController } from './budget.controller';
-import { BudgetService } from './budget.service';
+import { BudgetCategoryService } from './budget-category.service';
+import { BudgetPaymentService } from './budget-payment.service';
+import { BudgetSummaryService } from './budget-summary.service';
 import { WeddingModule } from '../wedding/wedding.module';
 
 @Module({
@@ -21,7 +17,7 @@ import { WeddingModule } from '../wedding/wedding.module';
     WeddingModule,
   ],
   controllers: [BudgetController],
-  providers: [BudgetService],
-  exports: [BudgetService],
+  providers: [BudgetCategoryService, BudgetPaymentService, BudgetSummaryService],
+  exports: [BudgetCategoryService, BudgetPaymentService, BudgetSummaryService],
 })
 export class BudgetModule {}

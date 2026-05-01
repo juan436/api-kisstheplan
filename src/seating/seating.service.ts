@@ -1,10 +1,18 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { SeatingPlan } from './schemas/seating-plan.schema';
+import {
+  SeatingPlan,
+  TableSeat,
+  SeatAssignment,
+  DecorationObject,
+  CalibZone,
+  CustomEmoji,
+} from './schemas/seating-plan.schema';
 import { CreatePlanDto } from './dto/create-plan.dto';
 import { UpdatePlanDto } from './dto/update-plan.dto';
 import { CreateTableDto, UpdateTableDto } from './dto/table.dto';
+import { PlanUpdateFields } from './interfaces/seating-update.interface';
 
 @Injectable()
 export class SeatingService {
@@ -27,7 +35,7 @@ export class SeatingService {
   }
 
   async updatePlan(id: string, weddingId: string, dto: UpdatePlanDto) {
-    const updateFields: any = {};
+    const updateFields: PlanUpdateFields = {};
     if (dto.name !== undefined) updateFields.name = dto.name;
     if (dto.backgroundImageUrl !== undefined) updateFields.backgroundImageUrl = dto.backgroundImageUrl;
     if (dto.scaleFactor !== undefined) updateFields.scaleFactor = dto.scaleFactor;
@@ -95,10 +103,10 @@ export class SeatingService {
     if (dto.shape !== undefined) table.shape = dto.shape;
     if (dto.posX !== undefined) table.posX = dto.posX;
     if (dto.posY !== undefined) table.posY = dto.posY;
-    if (dto.rotation !== undefined) (table as any).rotation = dto.rotation;
-    if (dto.physicalDiameter !== undefined) (table as any).physicalDiameter = dto.physicalDiameter;
-    if (dto.physicalWidth !== undefined) (table as any).physicalWidth = dto.physicalWidth;
-    if (dto.physicalHeight !== undefined) (table as any).physicalHeight = dto.physicalHeight;
+    if (dto.rotation !== undefined) table.rotation = dto.rotation;
+    if (dto.physicalDiameter !== undefined) table.physicalDiameter = dto.physicalDiameter;
+    if (dto.physicalWidth !== undefined) table.physicalWidth = dto.physicalWidth;
+    if (dto.physicalHeight !== undefined) table.physicalHeight = dto.physicalHeight;
 
     // If capacity changed, rebuild assignments preserving existing ones
     if (dto.capacity !== undefined && dto.capacity !== table.capacity) {
@@ -111,7 +119,7 @@ export class SeatingService {
           guestId: null,
         };
       });
-      table.assignments = newAssignments as any;
+      table.assignments = newAssignments as SeatAssignment[];
       table.capacity = dto.capacity;
     }
 
@@ -148,20 +156,19 @@ export class SeatingService {
     const seat = table.assignments.find((a) => a.seatNumber === seatNumber);
     if (!seat) throw new NotFoundException('Asiento no encontrado');
 
-    seat.guestId = guestId ? (new Types.ObjectId(guestId) as any) : (null as any);
+    seat.guestId = guestId ? new Types.ObjectId(guestId) : undefined;
 
     await plan.save();
     return plan;
   }
 
   toResponse(plan: SeatingPlan) {
-    const p = plan as any;
     return {
-      id: p._id.toString(),
+      id: (plan._id as Types.ObjectId).toString(),
       name: plan.name,
       backgroundImageUrl: plan.backgroundImageUrl || undefined,
       scaleFactor: plan.scaleFactor || undefined,
-      decorations: (plan.decorations || []).map((d: any) => ({
+      decorations: (plan.decorations || []).map((d: DecorationObject) => ({
         id: d.id,
         type: d.type,
         posX: d.posX,
@@ -173,7 +180,7 @@ export class SeatingService {
         objectType: d.objectType || undefined,
         guestId: d.guestId || undefined,
       })),
-      customEmojis: ((plan as any).customEmojis || []).map((e: any) => ({
+      customEmojis: (plan.customEmojis || []).map((e: CustomEmoji) => ({
         id: e.id,
         emoji: e.emoji || undefined,
         objectType: e.objectType || undefined,
@@ -181,26 +188,25 @@ export class SeatingService {
         physicalWidth: e.physicalWidth,
         physicalHeight: e.physicalHeight,
       })),
-      zones: ((plan as any).zones || []).map((z: any) => ({
+      zones: (plan.zones || []).map((z: CalibZone) => ({
         id: z.id,
         points: z.points,
         physicalWidth: z.physicalWidth,
         physicalHeight: z.physicalHeight,
         localScale: z.localScale,
       })),
-      tables: (plan.tables || []).map((t) => ({
+      tables: (plan.tables || []).map((t: TableSeat) => ({
         id: t._id.toString(),
         name: t.name,
-        // Map backend 'rect' → frontend 'rectangular' for TypeScript compatibility
         shape: t.shape === 'rect' ? 'rectangular' : t.shape,
         capacity: t.capacity,
         posX: t.posX,
         posY: t.posY,
-        rotation: (t as any).rotation ?? 0,
-        physicalDiameter: (t as any).physicalDiameter ?? undefined,
-        physicalWidth: (t as any).physicalWidth ?? undefined,
-        physicalHeight: (t as any).physicalHeight ?? undefined,
-        assignments: (t.assignments || []).map((a) => ({
+        rotation: t.rotation ?? 0,
+        physicalDiameter: t.physicalDiameter ?? undefined,
+        physicalWidth: t.physicalWidth ?? undefined,
+        physicalHeight: t.physicalHeight ?? undefined,
+        assignments: (t.assignments || []).map((a: SeatAssignment) => ({
           seatNumber: a.seatNumber,
           guestId: a.guestId ? a.guestId.toString() : undefined,
         })),

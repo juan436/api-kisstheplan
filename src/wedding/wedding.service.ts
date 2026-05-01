@@ -67,15 +67,30 @@ export class WeddingService {
       if (slugTaken) throw new ConflictException('Ese slug ya está en uso');
     }
 
-    const updateData: Record<string, unknown> = { ...dto };
-    if (dto.date) updateData.date = new Date(dto.date);
+    const { date, mealColors, allergyColors, ...rest } = dto;
+    
+    const restRecord = rest as Record<string, unknown>;
+    delete restRecord.userId;
+    delete restRecord._id;
+    delete restRecord.id;
 
-    const updated = await this.weddingModel.findByIdAndUpdate(
-      weddingId,
-      updateData,
-      { new: true },
-    );
-    return updated!;
+    Object.keys(restRecord).forEach(key => {
+      if (restRecord[key] !== undefined) {
+        wedding.set(key, restRecord[key]);
+      }
+    });
+
+    if (date) wedding.date = new Date(date);
+    
+    // Manejo explícito de Mapas para evitar errores de tipo en el save()
+    if (mealColors) {
+      wedding.mealColors = new Map(Object.entries(mealColors));
+    }
+    if (allergyColors) {
+      wedding.allergyColors = new Map(Object.entries(allergyColors));
+    }
+
+    return wedding.save();
   }
 
   toResponse(wedding: Wedding) {
@@ -109,7 +124,7 @@ export class WeddingService {
     const userWedding = await this.weddingModel.findOne({ userId }).lean();
     const conflict = await this.weddingModel.findOne({
       slug: cleaned,
-      ...(userWedding ? { _id: { $ne: (userWedding as any)._id } } : {}),
+      ...(userWedding?._id ? { _id: { $ne: userWedding._id } } : {}),
     });
     return { available: !conflict };
   }

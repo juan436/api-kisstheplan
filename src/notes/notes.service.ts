@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Note } from './schemas/note.schema';
+import { Note, MoodboardColor, MoodboardCategory, MoodboardImage } from './schemas/note.schema';
 import { CreateNoteDto, UpdateNoteDto, AddColorDto, AddCategoryDto, AddImageDto } from './dto/note.dto';
 
 @Injectable()
@@ -64,14 +64,15 @@ export class NotesService {
       hexColor: dto.hexColor,
       name: dto.name,
       order: note.colorPalette.length,
-    } as any);
+    } as MoodboardColor);
     await note.save();
     return note;
   }
 
   async removeColor(noteId: string, colorId: string, weddingId: string) {
     const note = await this.findOne(noteId, weddingId);
-    note.colorPalette = note.colorPalette.filter((c) => c._id.toString() !== colorId) as any;
+    const idx = note.colorPalette.findIndex((c) => c._id.toString() === colorId);
+    if (idx !== -1) note.colorPalette.splice(idx, 1);
     await note.save();
     return note;
   }
@@ -85,14 +86,15 @@ export class NotesService {
       name: dto.name,
       images: [],
       order: note.categories.length,
-    } as any);
+    } as MoodboardCategory);
     await note.save();
     return note;
   }
 
   async removeCategory(noteId: string, categoryId: string, weddingId: string) {
     const note = await this.findOne(noteId, weddingId);
-    note.categories = note.categories.filter((c) => c._id.toString() !== categoryId) as any;
+    const idx = note.categories.findIndex((c) => c._id.toString() === categoryId);
+    if (idx !== -1) note.categories.splice(idx, 1);
     await note.save();
     return note;
   }
@@ -106,7 +108,7 @@ export class NotesService {
       url: dto.url,
       caption: dto.caption,
       order: category.images.length,
-    } as any);
+    } as MoodboardImage);
     await note.save();
     return note;
   }
@@ -115,15 +117,15 @@ export class NotesService {
     const note = await this.findOne(noteId, weddingId);
     const category = note.categories.find((c) => c._id.toString() === categoryId);
     if (!category) throw new NotFoundException('Categoría no encontrada');
-    category.images = category.images.filter((img) => img._id.toString() !== imageId) as any;
+    const imgIdx = category.images.findIndex((img) => img._id.toString() === imageId);
+    if (imgIdx !== -1) category.images.splice(imgIdx, 1);
     await note.save();
     return note;
   }
 
   toResponse(note: Note) {
-    const n = note as any;
     return {
-      id: n._id.toString(),
+      id: (note._id as Types.ObjectId).toString(),
       type: note.type,
       title: note.title,
       vendorId: note.vendorId ? note.vendorId.toString() : null,

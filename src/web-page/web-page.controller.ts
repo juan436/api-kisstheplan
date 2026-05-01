@@ -10,6 +10,7 @@ import {
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { AuthUser } from '../common/interfaces/auth-user.interface';
 import { WebPageService } from './web-page.service';
 import { WeddingService } from '../wedding/wedding.service';
 import { CreateWebPageDto, UpdateWebPageDto, PublicRsvpDto } from './dto/create-web-page.dto';
@@ -22,7 +23,7 @@ export class WebPageController {
     private readonly weddingService: WeddingService,
   ) {}
 
-  private async getWeddingId(user: any): Promise<string> {
+  private async getWeddingId(user: AuthUser): Promise<string> {
     const wedding = await this.weddingService.findByUserId(user.id);
     return wedding._id.toString();
   }
@@ -32,7 +33,7 @@ export class WebPageController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Get('web-page')
-  async getMyWebPage(@CurrentUser() user: any) {
+  async getMyWebPage(@CurrentUser() user: AuthUser) {
     const weddingId = await this.getWeddingId(user);
     const page = await this.webPageService.findByWeddingId(weddingId);
     return page ? this.webPageService.toResponse(page) : null;
@@ -41,7 +42,7 @@ export class WebPageController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Post('web-page')
-  async createWebPage(@CurrentUser() user: any, @Body() dto: CreateWebPageDto) {
+  async createWebPage(@CurrentUser() user: AuthUser, @Body() dto: CreateWebPageDto) {
     const weddingId = await this.getWeddingId(user);
     const page = await this.webPageService.create(weddingId, dto);
     return this.webPageService.toResponse(page);
@@ -50,7 +51,7 @@ export class WebPageController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Patch('web-page')
-  async updateWebPage(@CurrentUser() user: any, @Body() dto: UpdateWebPageDto) {
+  async updateWebPage(@CurrentUser() user: AuthUser, @Body() dto: UpdateWebPageDto) {
     const weddingId = await this.getWeddingId(user);
     const page = await this.webPageService.update(weddingId, dto);
     return this.webPageService.toResponse(page);
@@ -59,7 +60,7 @@ export class WebPageController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Post('web-page/publish')
-  async publish(@CurrentUser() user: any) {
+  async publish(@CurrentUser() user: AuthUser) {
     const weddingId = await this.getWeddingId(user);
     const page = await this.webPageService.publish(weddingId);
     return this.webPageService.toResponse(page);
@@ -68,7 +69,7 @@ export class WebPageController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Post('web-page/unpublish')
-  async unpublish(@CurrentUser() user: any) {
+  async unpublish(@CurrentUser() user: AuthUser) {
     const weddingId = await this.getWeddingId(user);
     const page = await this.webPageService.unpublish(weddingId);
     return this.webPageService.toResponse(page);

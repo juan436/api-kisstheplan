@@ -1,3 +1,14 @@
+/**
+ * seed.ts
+ *
+ * Seed COMPLETO de desarrollo: borra toda la BD y la repuebla desde cero.
+ * Crea: 1 usuario, 1 boda, 22 invitados, categorías de presupuesto y tareas.
+ * DESTRUCTIVO — nunca ejecutar en producción.
+ * Run: pnpm seed
+ *
+ * Para añadir tareas con fechas concretas a una boda ya existente,
+ * usar seed-tasks-with-dates.ts (pnpm seed:tasks) en su lugar.
+ */
 import * as mongoose from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 import { UserSchema } from './user/schemas/user.schema';

@@ -33,8 +33,6 @@ export class ScriptController {
   @Get('entries')
   async getEntries(@CurrentUser('id') userId: string) {
     const wedding = await this.weddingService.findByUserId(userId);
-    // Auto-seed template if empty
-    await this.scriptService.seedTemplate(wedding._id.toString());
     const entries = await this.scriptService.findEntries(wedding._id.toString());
     return entries.map((e) => this.scriptService.entryToResponse(e));
   }

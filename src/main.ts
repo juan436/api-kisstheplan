@@ -14,9 +14,8 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
-  // Aumentar el límite de tamaño del body para permitir imágenes base64 en notas
-  app.use(bodyParser.json({ limit: '50mb' }));
-  app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+  app.use(bodyParser.json({ limit: '5mb' }));
+  app.use(bodyParser.urlencoded({ limit: '5mb', extended: true }));
 
   app.useGlobalPipes(
     new ValidationPipe({
