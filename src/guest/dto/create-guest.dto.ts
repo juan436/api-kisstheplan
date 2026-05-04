@@ -62,6 +62,11 @@ export class CreateGuestDto {
   @IsBoolean()
   plusOne?: boolean;
 
+  @ApiProperty({ required: false, default: false })
+  @IsOptional()
+  @IsBoolean()
+  invitationSent?: boolean;
+
   @ApiProperty({ required: false, default: 'A' })
   @IsOptional()
   @IsString()

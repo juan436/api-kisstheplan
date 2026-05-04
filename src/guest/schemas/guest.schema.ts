@@ -54,6 +54,9 @@ export class Guest extends Document {
   @Prop({ default: false })
   plusOne: boolean;
 
+  @Prop({ default: false })
+  invitationSent: boolean;
+
   @Prop({ default: 'A' })
   listName: string;
 

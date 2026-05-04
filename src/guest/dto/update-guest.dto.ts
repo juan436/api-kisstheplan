@@ -65,6 +65,11 @@ export class UpdateGuestDto {
 
   @ApiProperty({ required: false })
   @IsOptional()
+  @IsBoolean()
+  invitationSent?: boolean;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsString()
   listName?: string;
 
