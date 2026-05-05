@@ -52,18 +52,50 @@ export class VendorService {
     };
   }
 
-  /** For each vendor category, find-or-create the budget category (no items created). */
-  private async syncBudget(weddingId: string, categories: string[]) {
+  /** 
+   * Synchronizes budget categories with vendor categories for a wedding.
+   * - Ensures all categories currently used by vendors exist in the budget.
+   * - Removes budget categories that are not used by any vendor AND have no items.
+   */
+  private async syncBudget(weddingId: string) {
     const weddingOid = new Types.ObjectId(weddingId);
 
-    for (const catName of categories) {
+    // 1. Collect all unique categories from all vendors in this wedding
+    const vendors = await this.vendorModel.find({ weddingId: weddingOid }, { categories: 1 });
+    const allVendorCats = new Set<string>();
+    vendors.forEach(v => {
+      (v.categories || []).forEach(c => allVendorCats.add(c.toLowerCase().trim()));
+    });
+
+    // 2. Map categories for creation (preserving one of the original casings)
+    const originalVendorCats = new Map<string, string>();
+    vendors.forEach(v => {
+      (v.categories || []).forEach(c => originalVendorCats.set(c.toLowerCase().trim(), c.trim()));
+    });
+
+    // 3. Ensure all vendor categories exist in the budget
+    for (const catName of originalVendorCats.values()) {
+      const escapedName = catName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const exists = await this.categoryModel.findOne({
         weddingId: weddingOid,
-        name: { $regex: new RegExp(`^${catName}$`, 'i') },
+        name: { $regex: new RegExp(`^${escapedName}$`, 'i') },
       });
       if (!exists) {
         const count = await this.categoryModel.countDocuments({ weddingId: weddingOid });
-        await this.categoryModel.create({ weddingId: weddingOid, name: catName, order: count });
+        await this.categoryModel.create({ 
+          weddingId: weddingOid, 
+          name: catName, 
+          order: count 
+        });
+      }
+    }
+
+    // 4. Cleanup: Remove budget categories with NO vendors and NO items
+    const budgetCats = await this.categoryModel.find({ weddingId: weddingOid });
+    for (const bCat of budgetCats) {
+      const nameLower = bCat.name.toLowerCase().trim();
+      if (!allVendorCats.has(nameLower) && (bCat.items || []).length === 0) {
+        await this.categoryModel.deleteOne({ _id: bCat._id });
       }
     }
   }
@@ -82,7 +114,7 @@ export class VendorService {
       ...dto,
     });
     try {
-      await this.syncBudget(weddingId, vendor.categories);
+      await this.syncBudget(weddingId);
     } catch (e) {
       console.error('[VendorService] Budget sync error:', e);
     }
@@ -96,9 +128,11 @@ export class VendorService {
       { new: true },
     );
     if (!vendor) throw new NotFoundException('Vendor not found');
-    if (dto.categories && dto.categories.length > 0) {
+    
+    // Trigger sync if categories are updated
+    if (dto.categories) {
       try {
-        await this.syncBudget(weddingId, dto.categories);
+        await this.syncBudget(weddingId);
       } catch (e) {
         console.error('[VendorService] Budget sync error on update:', e);
       }
@@ -112,6 +146,12 @@ export class VendorService {
       weddingId: new Types.ObjectId(weddingId),
     });
     if (result.deletedCount === 0) throw new NotFoundException('Vendor not found');
+
+    try {
+      await this.syncBudget(weddingId);
+    } catch (e) {
+      console.error('[VendorService] Budget sync error on remove:', e);
+    }
   }
 
   // Payments

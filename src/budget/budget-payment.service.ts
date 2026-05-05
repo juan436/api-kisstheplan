@@ -80,6 +80,7 @@ export class BudgetPaymentService {
         const cat = categories.find((c) => c._id.toString() === p.categoryId?.toString());
         return {
           id: p._id.toString(),
+          itemId: p.itemId?.toString() ?? null,
           categoryId: p.categoryId?.toString() ?? null,
           categoryName: cat?.name ?? null,
           vendorId: p.vendorId?.toString() ?? null,
@@ -93,12 +94,13 @@ export class BudgetPaymentService {
       });
     }
 
-    const result: { id: string; categoryId: string | null; categoryName: string; vendorId: string | null; vendorName: string; concept: string; amount: number; dueDate: string; paid: boolean; notes: string | undefined }[] = [];
+    const result: { id: string; itemId: string; categoryId: string | null; categoryName: string; vendorId: string | null; vendorName: string; concept: string; amount: number; dueDate: string; paid: boolean; notes: string | undefined }[] = [];
     for (const cat of categories) {
       for (const item of cat.items) {
         if (!item.dueDate) continue;
         result.push({
           id: `item-${item._id.toString()}`,
+          itemId: item._id.toString(),
           categoryId: cat._id.toString(),
           categoryName: cat.name,
           vendorId: item.vendorId?.toString() ?? null,

@@ -1,4 +1,4 @@
-import { IsString, IsArray, IsEnum, IsOptional } from 'class-validator';
+import { IsString, IsArray, IsEnum, IsOptional, IsBoolean, IsNumber } from 'class-validator';
 
 export class CreateVendorDto {
   @IsString()
@@ -16,5 +16,10 @@ export class CreateVendorDto {
   @IsOptional() @IsString() phone?: string;
   @IsOptional() @IsString() web?: string;
   @IsOptional() @IsString() social?: string;
+  @IsOptional() @IsString() contractUrl?: string;
+  @IsOptional() @IsBoolean() needsStaffMenu?: boolean;
+  @IsOptional() @IsNumber() staffCount?: number;
+  @IsOptional() @IsString() staffAllergies?: string;
   @IsOptional() @IsString() notes?: string;
+  @IsOptional() @IsNumber() totalAmount?: number;
 }
