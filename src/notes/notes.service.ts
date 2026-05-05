@@ -73,6 +73,7 @@ export class NotesService {
     const note = await this.findOne(noteId, weddingId);
     const idx = note.colorPalette.findIndex((c) => c._id.toString() === colorId);
     if (idx !== -1) note.colorPalette.splice(idx, 1);
+    note.markModified('colorPalette');
     await note.save();
     return note;
   }
@@ -95,6 +96,7 @@ export class NotesService {
     const note = await this.findOne(noteId, weddingId);
     const idx = note.categories.findIndex((c) => c._id.toString() === categoryId);
     if (idx !== -1) note.categories.splice(idx, 1);
+    note.markModified('categories');
     await note.save();
     return note;
   }
@@ -109,6 +111,7 @@ export class NotesService {
       caption: dto.caption,
       order: category.images.length,
     } as MoodboardImage);
+    note.markModified('categories');
     await note.save();
     return note;
   }
@@ -119,6 +122,7 @@ export class NotesService {
     if (!category) throw new NotFoundException('Categoría no encontrada');
     const imgIdx = category.images.findIndex((img) => img._id.toString() === imageId);
     if (imgIdx !== -1) category.images.splice(imgIdx, 1);
+    note.markModified('categories');
     await note.save();
     return note;
   }
