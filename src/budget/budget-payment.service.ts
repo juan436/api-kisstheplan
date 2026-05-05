@@ -68,30 +68,41 @@ export class BudgetPaymentService {
   }
 
   async findAllPaymentsForCalendar(weddingId: string) {
-    const payments = await this.paymentScheduleModel
-      .find({ weddingId: new Types.ObjectId(weddingId), itemId: { $exists: true } })
-      .sort({ dueDate: 1 });
+    const [payments, categories] = await Promise.all([
+      this.paymentScheduleModel
+        .find({ weddingId: new Types.ObjectId(weddingId), itemId: { $exists: true } })
+        .sort({ dueDate: 1 }),
+      this.findCategories(weddingId),
+    ]);
+
     if (payments.length > 0) {
-      return payments.map((p) => ({
-        id: p._id.toString(),
-        categoryId: p.categoryId?.toString() ?? null,
-        vendorName: p.vendorName || '',
-        concept: p.concept,
-        amount: p.amount,
-        dueDate: p.dueDate.toISOString().split('T')[0],
-        paid: !!p.paidAt,
-        notes: p.notes,
-      }));
+      return payments.map((p) => {
+        const cat = categories.find((c) => c._id.toString() === p.categoryId?.toString());
+        return {
+          id: p._id.toString(),
+          categoryId: p.categoryId?.toString() ?? null,
+          categoryName: cat?.name ?? null,
+          vendorId: p.vendorId?.toString() ?? null,
+          vendorName: p.vendorName || '',
+          concept: p.concept,
+          amount: p.amount,
+          dueDate: p.dueDate.toISOString().split('T')[0],
+          paid: !!p.paidAt,
+          notes: p.notes,
+        };
+      });
     }
-    const categories = await this.findCategories(weddingId);
-    const result: { id: string; categoryId: string | null; vendorName: string; concept: string; amount: number; dueDate: string; paid: boolean; notes: string | undefined }[] = [];
+
+    const result: { id: string; categoryId: string | null; categoryName: string; vendorId: string | null; vendorName: string; concept: string; amount: number; dueDate: string; paid: boolean; notes: string | undefined }[] = [];
     for (const cat of categories) {
       for (const item of cat.items) {
         if (!item.dueDate) continue;
         result.push({
           id: `item-${item._id.toString()}`,
           categoryId: cat._id.toString(),
-          vendorName: cat.name,
+          categoryName: cat.name,
+          vendorId: item.vendorId?.toString() ?? null,
+          vendorName: item.vendorName || cat.name,
           concept: item.concept,
           amount: item.actual || item.estimated || 0,
           dueDate: new Date(item.dueDate).toISOString().split('T')[0],
