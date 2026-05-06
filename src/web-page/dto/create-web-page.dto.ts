@@ -31,6 +31,7 @@ export class UpdateWebPageDto {
   @IsOptional() @IsString() storyText?: string;
   @IsOptional() @IsString() scheduleTitle?: string;
   @IsOptional() @IsString() scheduleText?: string;
+  @IsOptional() @IsString() scheduleStyle?: string;
   @IsOptional() @IsString() locationTitle?: string;
   @IsOptional() @IsString() locationText?: string;
   @IsOptional() @IsString() transportTitle?: string;

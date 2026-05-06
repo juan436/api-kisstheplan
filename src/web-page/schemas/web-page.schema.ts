@@ -63,6 +63,9 @@ export class WebPage extends Document {
   @Prop({ default: '' })
   scheduleText: string;
 
+  @Prop({ default: 'B' })
+  scheduleStyle: string;
+
   @Prop({ default: '' })
   locationTitle: string;
 
