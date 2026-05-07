@@ -14,6 +14,7 @@ export class UpdateWebPageDto {
   @IsOptional() @IsString() fontTitle?: string;
   @IsOptional() @IsString() fontBody?: string;
   @IsOptional() @IsString() heroImage?: string;
+  @IsOptional() @IsString() heroImagePosition?: string;
   @IsOptional() @IsArray() galleryImages?: string[];
 
   // RSVP

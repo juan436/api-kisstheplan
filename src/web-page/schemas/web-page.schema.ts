@@ -22,6 +22,9 @@ export class WebPage extends Document {
   @Prop({ default: '' })
   heroImage: string;
 
+  @Prop({ default: 'center center' })
+  heroImagePosition: string;
+
   @Prop({ type: [String], default: [] })
   galleryImages: string[];
 
