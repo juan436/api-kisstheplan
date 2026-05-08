@@ -109,7 +109,7 @@ export class AuthService {
       email: user.email,
       name: user.name,
       avatarUrl: user.avatarUrl,
-      onboardingComplete: user.onboardingComplete ?? true,
+      onboardingComplete: user.onboardingComplete ?? false,
     };
   }
 
@@ -135,7 +135,7 @@ export class AuthService {
         email: user!.email,
         name: user!.name,
         avatarUrl: user!.avatarUrl,
-        onboardingComplete: user!.onboardingComplete ?? true,
+        onboardingComplete: user!.onboardingComplete ?? false,
       },
       ...tokens,
     };

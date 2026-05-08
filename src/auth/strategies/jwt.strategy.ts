@@ -24,8 +24,8 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     const user = await this.userService.findById(payload.sub);
     if (!user) throw new UnauthorizedException();
 
-    // Buscar la boda del usuario
-    const wedding = await this.weddingModel.findOne({ userId: user._id });
+    // Buscar la boda del usuario de forma ligera
+    const wedding = await this.weddingModel.findOne({ userId: user._id }).lean();
 
     return {
       id: user._id.toString(),
