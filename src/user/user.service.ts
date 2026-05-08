@@ -23,6 +23,34 @@ export class UserService {
     return this.userModel.create(data);
   }
 
+  async createGoogleUser(data: {
+    email: string;
+    name: string;
+    googleId: string;
+    avatarUrl?: string;
+  }): Promise<User> {
+    return this.userModel.create({ ...data, onboardingComplete: false });
+  }
+
+  async findByGoogleId(googleId: string): Promise<User | null> {
+    return this.userModel.findOne({ googleId });
+  }
+
+  async linkGoogleId(
+    userId: string,
+    googleId: string,
+    avatarUrl?: string,
+  ): Promise<void> {
+    await this.userModel.findByIdAndUpdate(userId, {
+      googleId,
+      ...(avatarUrl && { avatarUrl }),
+    });
+  }
+
+  async setOnboardingComplete(userId: string): Promise<void> {
+    await this.userModel.findByIdAndUpdate(userId, { onboardingComplete: true });
+  }
+
   async updateRefreshToken(
     userId: string,
     refreshTokenHash: string | null,

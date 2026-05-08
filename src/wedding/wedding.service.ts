@@ -10,11 +10,13 @@ import { Wedding } from './schemas/wedding.schema';
 import { CreateWeddingDto } from './dto/create-wedding.dto';
 import { UpdateWeddingDto } from './dto/update-wedding.dto';
 import { generateSlug } from './helpers/slug.helper';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class WeddingService {
   constructor(
     @InjectModel(Wedding.name) private weddingModel: Model<Wedding>,
+    private userService: UserService,
   ) {}
 
   async create(userId: string, dto: CreateWeddingDto): Promise<Wedding> {
@@ -26,12 +28,15 @@ export class WeddingService {
     let slug = generateSlug(dto.partner1Name, dto.partner2Name);
     slug = await this.ensureUniqueSlug(slug);
 
-    return this.weddingModel.create({
+    const wedding = await this.weddingModel.create({
       userId,
       slug,
       ...dto,
       date: new Date(dto.date),
     });
+
+    await this.userService.setOnboardingComplete(userId);
+    return wedding;
   }
 
   async findByUserId(userId: string): Promise<Wedding> {

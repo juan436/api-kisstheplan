@@ -5,6 +5,7 @@ import { Wedding, WeddingSchema } from './schemas/wedding.schema';
 import { WeddingController } from './wedding.controller';
 import { WeddingService } from './wedding.service';
 import { TaskModule } from '../task/task.module';
+import { UserModule } from '../user/user.module';
 import { ExpenseCategory, ExpenseCategorySchema } from '../budget/schemas/expense-category.schema';
 
 @Module({
@@ -14,6 +15,7 @@ import { ExpenseCategory, ExpenseCategorySchema } from '../budget/schemas/expens
       { name: ExpenseCategory.name, schema: ExpenseCategorySchema },
     ]),
     forwardRef(() => TaskModule),
+    UserModule,
   ],
   controllers: [WeddingController],
   providers: [WeddingService, WeddingGuard],

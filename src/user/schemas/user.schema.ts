@@ -6,8 +6,8 @@ export class User extends Document {
   @Prop({ required: true, unique: true, lowercase: true, trim: true })
   email: string;
 
-  @Prop({ required: true })
-  passwordHash: string;
+  @Prop()
+  passwordHash?: string;
 
   @Prop({ required: true, trim: true })
   name: string;
@@ -17,6 +17,12 @@ export class User extends Document {
 
   @Prop()
   refreshTokenHash?: string;
+
+  @Prop({ sparse: true, unique: true })
+  googleId?: string;
+
+  @Prop({ default: false })
+  onboardingComplete: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

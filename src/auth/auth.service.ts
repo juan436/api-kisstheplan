@@ -7,6 +7,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import { UserService } from '../user/user.service';
+import { GoogleProfile } from './strategies/google.strategy';
 
 @Injectable()
 export class AuthService {
@@ -45,6 +46,10 @@ export class AuthService {
     const user = await this.userService.findByEmail(email);
     if (!user) {
       throw new UnauthorizedException('Credenciales incorrectas');
+    }
+
+    if (!user.passwordHash) {
+      throw new UnauthorizedException('Esta cuenta usa Google. Inicia sesión con Google.');
     }
 
     const passwordValid = await bcrypt.compare(password, user.passwordHash);
@@ -104,6 +109,35 @@ export class AuthService {
       email: user.email,
       name: user.name,
       avatarUrl: user.avatarUrl,
+      onboardingComplete: user.onboardingComplete ?? true,
+    };
+  }
+
+  async validateGoogleUser(profile: GoogleProfile) {
+    let user = await this.userService.findByGoogleId(profile.googleId);
+
+    if (!user) {
+      const existing = await this.userService.findByEmail(profile.email);
+      if (existing) {
+        await this.userService.linkGoogleId(existing._id.toString(), profile.googleId, profile.avatarUrl);
+        user = await this.userService.findById(existing._id.toString());
+      } else {
+        user = await this.userService.createGoogleUser(profile);
+      }
+    }
+
+    const tokens = await this.generateTokens(user!._id.toString(), user!.email);
+    await this.updateRefreshTokenHash(user!._id.toString(), tokens.refreshToken);
+
+    return {
+      user: {
+        id: user!._id.toString(),
+        email: user!.email,
+        name: user!.name,
+        avatarUrl: user!.avatarUrl,
+        onboardingComplete: user!.onboardingComplete ?? true,
+      },
+      ...tokens,
     };
   }
 
