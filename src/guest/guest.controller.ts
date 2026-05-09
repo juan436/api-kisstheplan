@@ -1,18 +1,24 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, HttpCode, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { Response } from 'express';
 import { GuestService } from './guest.service';
 import { CreateGuestDto } from './dto/create-guest.dto';
 import { UpdateGuestDto } from './dto/update-guest.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { WeddingGuard } from '../wedding/guards/wedding.guard';
 import { CurrentWeddingId } from '../common/decorators/current-wedding-id.decorator';
+import { ExcelService } from '../excel/excel.service';
 
 @ApiTags('Guests')
 @Controller('guests')
 @UseGuards(JwtAuthGuard, WeddingGuard)
 @ApiBearerAuth()
 export class GuestController {
-  constructor(private guestService: GuestService) {}
+  constructor(
+    private guestService: GuestService,
+    private excelService: ExcelService,
+  ) {}
 
   @Get()
   async findAll(
@@ -41,6 +47,86 @@ export class GuestController {
   async delete(@CurrentWeddingId() weddingId: string, @Param('id') guestId: string) {
     await this.guestService.delete(guestId, weddingId);
     return { message: 'Invitado eliminado' };
+  }
+
+  @Get('export/excel')
+  async exportExcel(@CurrentWeddingId() weddingId: string, @Res() res: Response) {
+    const [guests, groups] = await Promise.all([
+      this.guestService.findAll(weddingId),
+      this.guestService.findAllGroups(weddingId),
+    ]);
+    const groupMap = new Map(groups.map((g) => [g._id.toString(), g.name]));
+    const rows = guests.map((g) => ({
+      firstName:      g.firstName,
+      lastName:       g.lastName       || '',
+      email:          g.email          || '',
+      dish:           g.mealChoice     || '',
+      allergies:      g.allergies      || '',
+      address:        g.address        || '',
+      transport:      g.transport      ?? false,
+      listName:       g.listName       || 'A',
+      role:           g.role           || '',
+      group:          g.groupId ? (groupMap.get(g.groupId.toString()) ?? '') : '',
+      invitationSent: g.invitationSent ?? false,
+      rsvp:           g.rsvpStatus,
+    }));
+    const buffer = await this.excelService.generateGuestsExcel(rows);
+    res.set({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': 'attachment; filename="invitados.xlsx"',
+    });
+    res.send(buffer);
+  }
+
+  @Get('export/pdf')
+  async exportPdf(@CurrentWeddingId() weddingId: string, @Res() res: Response) {
+    const [guests, groups, wedding] = await Promise.all([
+      this.guestService.findAll(weddingId),
+      this.guestService.findAllGroups(weddingId),
+      this.guestService.getWeddingName(weddingId),
+    ]);
+    const groupMap = new Map(groups.map((g) => [g._id.toString(), g.name]));
+    const rows = guests.map((g) => ({
+      firstName:      g.firstName,
+      lastName:       g.lastName       || '',
+      email:          g.email          || '',
+      dish:           g.mealChoice     || '',
+      allergies:      g.allergies      || '',
+      address:        g.address        || '',
+      transport:      g.transport      ?? false,
+      listName:       g.listName       || 'A',
+      role:           g.role           || '',
+      group:          g.groupId ? (groupMap.get(g.groupId.toString()) ?? '') : '',
+      invitationSent: g.invitationSent ?? false,
+      rsvp:           g.rsvpStatus,
+    }));
+    const buffer = await this.excelService.generateGuestsPdf(rows, wedding);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': 'attachment; filename="invitados.pdf"',
+    });
+    res.send(buffer);
+  }
+
+  @Get('template')
+  async downloadTemplate(@Res() res: Response) {
+    const buffer = await this.excelService.generateGuestTemplate();
+    res.set({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': 'attachment; filename="plantilla-invitados.xlsx"',
+    });
+    res.send(buffer);
+  }
+
+  @Post('import')
+  @UseInterceptors(FileInterceptor('file'))
+  async importExcel(
+    @CurrentWeddingId() weddingId: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    const parsed = await this.excelService.parseGuestImport(file.buffer);
+    const created = await this.guestService.importGuests(weddingId, parsed);
+    return { imported: created };
   }
 
   @Get('stats')

@@ -14,6 +14,7 @@ import { UpdateGuestDto } from './dto/update-guest.dto';
 import { KtpMailerService } from '../mailer/ktp-mailer.service';
 import { ConfigService } from '@nestjs/config';
 import { Wedding } from '../wedding/schemas/wedding.schema';
+import { ParsedGuest } from '../excel/excel.service';
 
 @Injectable()
 export class GuestService {
@@ -177,6 +178,31 @@ export class GuestService {
       .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
       .map((r) => String(r.reason?.message ?? r.reason));
     return { sent, failed: errors.length, errors };
+  }
+
+  async getWeddingName(weddingId: string): Promise<string> {
+    const wedding = await this.weddingModel.findById(weddingId).lean<Wedding>();
+    if (!wedding) return 'KissthePlan';
+    return `${wedding.partner1Name} & ${wedding.partner2Name}`;
+  }
+
+  async importGuests(weddingId: string, guests: ParsedGuest[]): Promise<number> {
+    const docs = guests.map((g) => ({
+      weddingId:      new Types.ObjectId(weddingId),
+      firstName:      g.firstName,
+      lastName:       g.lastName       ?? '',
+      email:          g.email,
+      listName:       g.listName       ?? 'A',
+      mealChoice:     g.mealChoice,
+      allergies:      g.allergies,
+      address:        g.address,
+      transport:      g.transport      ?? false,
+      role:           g.role,
+      invitationSent: g.invitationSent ?? false,
+      rsvpStatus:     g.rsvpStatus     ?? 'pending',
+    }));
+    const result = await this.guestModel.insertMany(docs, { ordered: false });
+    return result.length;
   }
 
   async findByToken(token: string) {

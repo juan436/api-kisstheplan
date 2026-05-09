@@ -1,8 +1,11 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, Res } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { Response } from 'express';
 import { BudgetCategoryService } from './budget-category.service';
 import { BudgetPaymentService } from './budget-payment.service';
 import { BudgetSummaryService } from './budget-summary.service';
+import { ExcelService } from '../excel/excel.service';
+import { WeddingService } from '../wedding/wedding.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { CreateItemDto } from './dto/create-item.dto';
@@ -22,6 +25,8 @@ export class BudgetController {
     private categoryService: BudgetCategoryService,
     private paymentService: BudgetPaymentService,
     private summaryService: BudgetSummaryService,
+    private excelService: ExcelService,
+    private weddingService: WeddingService,
   ) {}
 
   @Get('categories')
@@ -94,6 +99,70 @@ export class BudgetController {
   @Get('vendor/:vendorId/payments')
   async getVendorPayments(@CurrentWeddingId() weddingId: string, @Param('vendorId') vendorId: string) {
     return this.paymentService.findPaymentsByVendor(weddingId, vendorId);
+  }
+
+  @Get('export/excel')
+  async exportExcel(@CurrentWeddingId() weddingId: string, @Res() res: Response) {
+    const [cats, summary, wedding] = await Promise.all([
+      this.categoryService.findCategoriesWithPaid(weddingId),
+      this.summaryService.getSummary(weddingId),
+      this.weddingService.findById(weddingId),
+    ]);
+
+    const weddingName = wedding
+      ? `${wedding.partner1Name} & ${wedding.partner2Name}`
+      : 'KissthePlan';
+
+    const budgetCats = cats.map((c) => ({
+      name: c.name,
+      items: c.items.map((i) => ({
+        concept:   i.concept,
+        estimated: i.estimated,
+        real:      i.real,
+        paid:      i.paid,
+      })),
+    }));
+
+    const buffer = await this.excelService.generateBudgetExcel(budgetCats, summary, weddingName);
+    res.set({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': 'attachment; filename="presupuesto.xlsx"',
+    });
+    res.send(buffer);
+  }
+
+  @Get('export/pdf')
+  async exportPdf(@CurrentWeddingId() weddingId: string, @Res() res: Response) {
+    const [cats, summary, wedding] = await Promise.all([
+      this.categoryService.findCategoriesWithPaid(weddingId),
+      this.summaryService.getSummary(weddingId),
+      this.weddingService.findById(weddingId),
+    ]);
+
+    const weddingName = wedding
+      ? `${wedding.partner1Name} & ${wedding.partner2Name}`
+      : 'KissthePlan';
+
+    const weddingDate = wedding?.date
+      ? new Date(wedding.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
+      : undefined;
+
+    const budgetCats = cats.map((c) => ({
+      name: c.name,
+      items: c.items.map((i) => ({
+        concept:   i.concept,
+        estimated: i.estimated,
+        real:      i.real,
+        paid:      i.paid,
+      })),
+    }));
+
+    const buffer = await this.excelService.generateBudgetPdf(budgetCats, summary, weddingName, weddingDate);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': 'attachment; filename="presupuesto.pdf"',
+    });
+    res.send(buffer);
   }
 
   @Get('payments/upcoming')

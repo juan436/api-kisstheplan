@@ -46,6 +46,10 @@ export class WeddingService {
     return wedding;
   }
 
+  async findById(weddingId: string): Promise<Wedding | null> {
+    return this.weddingModel.findById(weddingId);
+  }
+
   async findBySlug(slug: string): Promise<Wedding> {
     const wedding = await this.weddingModel.findOne({
       slug: slug.toLowerCase(),

@@ -17,6 +17,7 @@ import { CalendarModule } from './calendar/calendar.module';
 import { ScriptModule } from './script/script.module';
 import { SeatingModule } from './seating/seating.module';
 import { NotesModule } from './notes/notes.module';
+import { LeadModule } from './lead/lead.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { NotesModule } from './notes/notes.module';
     ScriptModule,
     SeatingModule,
     NotesModule,
+    LeadModule,
   ],
   controllers: [AppController],
 })

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    body { font-family: 'Georgia', serif; background: #FAF7F2; margin: 0; padding: 40px 20px; color: #4A3C32; }
+    .card { background: #fff; max-width: 480px; margin: 0 auto; border-radius: 16px; padding: 40px; box-shadow: 0 8px 32px rgba(74,60,50,0.08); }
+    .label { font-size: 11px; text-transform: uppercase; letter-spacing: 3px; opacity: 0.5; margin-bottom: 6px; }
+    .email { font-size: 18px; font-weight: 600; color: #c7a977; word-break: break-all; }
+    .footer { margin-top: 32px; font-size: 12px; opacity: 0.4; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <p class="label">Nuevo lead — Early Access</p>
+    <p class="email">{{email}}</p>
+    <p style="font-size:13px; opacity:0.6; margin-top:16px;">
+      Se ha registrado un nuevo interesado en KissthePlan.<br/>
+      Fecha: {{date}}
+    </p>
+    <div class="footer">KissthePlan · kisstheplan.com</div>
+  </div>
+</body>
+</html>

@@ -7,6 +7,7 @@ import { GuestController } from './guest.controller';
 import { GuestService } from './guest.service';
 import { WeddingModule } from '../wedding/wedding.module';
 import { KtpMailerModule } from '../mailer/ktp-mailer.module';
+import { ExcelModule } from '../excel/excel.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { KtpMailerModule } from '../mailer/ktp-mailer.module';
     ]),
     WeddingModule,
     KtpMailerModule,
+    ExcelModule,
   ],
   controllers: [GuestController],
   providers: [GuestService],

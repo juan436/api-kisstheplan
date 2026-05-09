@@ -7,6 +7,7 @@ import { BudgetCategoryService } from './budget-category.service';
 import { BudgetPaymentService } from './budget-payment.service';
 import { BudgetSummaryService } from './budget-summary.service';
 import { WeddingModule } from '../wedding/wedding.module';
+import { ExcelModule } from '../excel/excel.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { WeddingModule } from '../wedding/wedding.module';
       { name: PaymentSchedule.name, schema: PaymentScheduleSchema },
     ]),
     WeddingModule,
+    ExcelModule,
   ],
   controllers: [BudgetController],
   providers: [BudgetCategoryService, BudgetPaymentService, BudgetSummaryService],

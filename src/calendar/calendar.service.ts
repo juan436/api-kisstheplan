@@ -36,7 +36,7 @@ export class CalendarService {
 
     // Wedding day event
     lines.push(...this.buildEvent({
-      uid: `wedding-${weddingId}@kisstheplan.es`,
+      uid: `wedding-${weddingId}@kisstheplan.com`,
       dtstart: this.formatDate(weddingDate),
       summary: `💍 ${weddingName}`,
       description: 'El gran día',
@@ -46,7 +46,7 @@ export class CalendarService {
     for (const task of tasks) {
       if (!task.dueDate) continue;
       lines.push(...this.buildEvent({
-        uid: `task-${task._id.toString()}@kisstheplan.es`,
+        uid: `task-${task._id.toString()}@kisstheplan.com`,
         dtstart: this.formatDate(task.dueDate),
         summary: `✓ ${task.title}`,
         description: task.notes || task.category || '',
@@ -59,7 +59,7 @@ export class CalendarService {
       const label = payment.vendorName || payment.concept || 'Pago';
       const amount = `${(payment.amount || 0).toLocaleString('es-ES')} EUR`;
       lines.push(...this.buildEvent({
-        uid: `payment-${payment._id.toString()}@kisstheplan.es`,
+        uid: `payment-${payment._id.toString()}@kisstheplan.com`,
         dtstart: this.formatDate(payment.dueDate),
         summary: `💶 ${label} — ${amount}`,
         description: payment.notes || '',
