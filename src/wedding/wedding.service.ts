@@ -5,7 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Wedding } from './schemas/wedding.schema';
 import { CreateWeddingDto } from './dto/create-wedding.dto';
 import { UpdateWeddingDto } from './dto/update-wedding.dto';
@@ -20,7 +20,8 @@ export class WeddingService {
   ) {}
 
   async create(userId: string, dto: CreateWeddingDto): Promise<Wedding> {
-    const existing = await this.weddingModel.findOne({ userId });
+    const userObjectId = new Types.ObjectId(userId);
+    const existing = await this.weddingModel.findOne({ userId: userObjectId });
     if (existing) {
       throw new ConflictException('Ya tienes una boda creada');
     }
@@ -29,7 +30,7 @@ export class WeddingService {
     slug = await this.ensureUniqueSlug(slug);
 
     const wedding = await this.weddingModel.create({
-      userId,
+      userId: userObjectId,
       slug,
       ...dto,
       date: new Date(dto.date),
@@ -40,7 +41,7 @@ export class WeddingService {
   }
 
   async findByUserId(userId: string): Promise<Wedding> {
-    const wedding = await this.weddingModel.findOne({ userId });
+    const wedding = await this.weddingModel.findOne({ userId: new Types.ObjectId(userId) });
     if (!wedding) throw new NotFoundException('No tienes boda creada');
     return wedding;
   }
@@ -126,7 +127,7 @@ export class WeddingService {
 
   async checkSlug(slug: string, userId: string): Promise<{ available: boolean }> {
     const cleaned = slug.toLowerCase().replace(/[^a-z0-9-]/g, '');
-    const userWedding = await this.weddingModel.findOne({ userId }).lean();
+    const userWedding = await this.weddingModel.findOne({ userId: new Types.ObjectId(userId) }).lean();
     const conflict = await this.weddingModel.findOne({
       slug: cleaned,
       ...(userWedding?._id ? { _id: { $ne: userWedding._id } } : {}),
