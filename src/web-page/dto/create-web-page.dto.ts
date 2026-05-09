@@ -1,4 +1,5 @@
-import { IsString, IsOptional, IsBoolean, IsDateString, IsArray } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsDateString, IsArray, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateWebPageDto {
   @IsOptional() @IsString() templateId?: string;
@@ -52,4 +53,30 @@ export class PublicRsvpDto {
   @IsOptional() @IsString() allergies?: string;
   @IsOptional() @IsBoolean() transport?: boolean;
   @IsOptional() @IsString() transportPickupPoint?: string;
+}
+
+export class RsvpLookupDto {
+  @IsString() name: string;
+  @IsString() email: string;
+}
+
+export class RsvpEmailLookupDto {
+  @IsString() email: string;
+}
+
+class GuestRsvpResponse {
+  @IsString() guestId: string;
+  @IsString() rsvpStatus: 'confirmed' | 'rejected';
+  @IsOptional() @IsString() mealChoice?: string;
+  @IsOptional() @IsString() allergies?: string;
+  @IsOptional() @IsBoolean() transport?: boolean;
+  @IsOptional() @IsString() transportPickupPoint?: string;
+}
+
+export class GroupRsvpDto {
+  @IsString() token: string;
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => GuestRsvpResponse)
+  responses: GuestRsvpResponse[];
 }

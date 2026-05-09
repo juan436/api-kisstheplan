@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, HttpCode } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { GuestService } from './guest.service';
 import { CreateGuestDto } from './dto/create-guest.dto';
@@ -46,6 +46,24 @@ export class GuestController {
   @Get('stats')
   async getStats(@CurrentWeddingId() weddingId: string) {
     return this.guestService.getStats(weddingId);
+  }
+
+  @Post('invite-bulk')
+  @HttpCode(200)
+  async sendBulkInvites(
+    @CurrentWeddingId() weddingId: string,
+    @Body('guestIds') guestIds: string[],
+  ) {
+    return this.guestService.sendBulkInvitations(guestIds, weddingId);
+  }
+
+  @Post(':id/invite')
+  @HttpCode(200)
+  async sendInvite(
+    @CurrentWeddingId() weddingId: string,
+    @Param('id') guestId: string,
+  ) {
+    return this.guestService.sendInvitation(guestId, weddingId);
   }
 
   @Get(':id/history')

@@ -2,15 +2,16 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { WebPage } from './schemas/web-page.schema';
-import { CreateWebPageDto, UpdateWebPageDto, PublicRsvpDto } from './dto/create-web-page.dto';
+import { CreateWebPageDto, UpdateWebPageDto, PublicRsvpDto, RsvpLookupDto, GroupRsvpDto } from './dto/create-web-page.dto';
 import { Guest, RsvpStatus } from '../guest/schemas/guest.schema';
+import { Wedding } from '../wedding/schemas/wedding.schema';
 
 @Injectable()
 export class WebPageService {
   constructor(
     @InjectModel(WebPage.name) private webPageModel: Model<WebPage>,
     @InjectModel(Guest.name) private guestModel: Model<Guest>,
-    @InjectModel('Wedding') private weddingModel: Model<any>,
+    @InjectModel(Wedding.name) private weddingModel: Model<Wedding>,
   ) {}
 
   async findByWeddingId(weddingId: string): Promise<WebPage | null> {
@@ -165,6 +166,135 @@ export class WebPageService {
     await guest.save();
 
     return { success: true, message: 'RSVP updated successfully' };
+  }
+
+  async findGuestByToken(token: string) {
+    const guest = await this.guestModel.findOne({ invitationToken: token }).lean();
+    if (!guest) throw new NotFoundException('Token de invitación no válido');
+
+    const wedding = await this.weddingModel.findById(guest.weddingId).lean<Wedding>();
+    if (!wedding) throw new NotFoundException('Boda no encontrada');
+
+    const webPage = await this.webPageModel.findOne({ weddingId: guest.weddingId }).lean();
+
+    const groupMembers = guest.groupId
+      ? await this.guestModel.find({ groupId: guest.groupId }).lean()
+      : [];
+
+    return {
+      guest: this.guestToPublic(guest),
+      group: guest.groupId
+        ? { id: guest.groupId.toString(), members: groupMembers.map((m) => this.guestToPublic(m)) }
+        : null,
+      wedding: {
+        slug: wedding.slug,
+        partner1Name: wedding.partner1Name,
+        partner2Name: wedding.partner2Name,
+        date: wedding.date,
+        venue: wedding.venue,
+        mealOptions: webPage?.mealOptions ?? wedding.mealOptions ?? [],
+        allergyOptions: wedding.allergyOptions ?? [],
+        transportOptions: webPage?.transportOptions ?? wedding.transportOptions ?? [],
+        confirmMessage: webPage?.confirmMessage ?? '',
+        rejectMessage: webPage?.rejectMessage ?? '',
+      },
+      token: guest.invitationToken ?? '',
+    };
+  }
+
+  async lookupGuest(slug: string, dto: RsvpLookupDto) {
+    const wedding = await this.weddingModel.findOne({ slug }).lean<Wedding>();
+    if (!wedding) throw new NotFoundException('Boda no encontrada');
+
+    const nameParts = dto.name.trim().split(/\s+/);
+    const firstName = nameParts[0];
+    const lastName = nameParts.slice(1).join(' ');
+
+    const query: Record<string, unknown> = {
+      weddingId: wedding._id,
+      email: new RegExp(`^${dto.email.trim()}$`, 'i'),
+      firstName: new RegExp(`^${firstName}$`, 'i'),
+    };
+    if (lastName) query.lastName = new RegExp(`^${lastName}$`, 'i');
+
+    const guest = await this.guestModel.findOne(query).lean();
+    if (!guest) throw new NotFoundException('No te encontramos en la lista de invitados');
+
+    return this.findGuestByToken(guest.invitationToken ?? `${guest._id}`);
+  }
+
+  async lookupByEmail(slug: string, email: string) {
+    const wedding = await this.weddingModel.findOne({ slug }).lean<Wedding>();
+    if (!wedding) throw new NotFoundException('Boda no encontrada');
+
+    const guest = await this.guestModel
+      .findOne({ weddingId: wedding._id, email: new RegExp(`^${email.trim()}$`, 'i') })
+      .lean();
+    if (!guest) throw new NotFoundException('No estás en la lista de invitados');
+
+    return this.findGuestByToken(guest.invitationToken ?? `${guest._id}`);
+  }
+
+  async submitGroupRsvp(slug: string, dto: GroupRsvpDto) {
+    const guest = await this.guestModel.findOne({ invitationToken: dto.token }).lean();
+    if (!guest) throw new NotFoundException('Token de invitación no válido');
+
+    const wedding = await this.weddingModel.findOne({ slug }).lean<Wedding>();
+    if (!wedding) throw new NotFoundException('Boda no encontrada');
+    if (guest.weddingId.toString() !== wedding._id.toString()) throw new BadRequestException('Token inválido para esta boda');
+
+    await Promise.all(
+      dto.responses.map(async (r) => {
+        const member = await this.guestModel.findById(r.guestId);
+        if (!member || member.weddingId.toString() !== wedding._id.toString()) return;
+        member.rsvpStatus = r.rsvpStatus === 'confirmed' ? RsvpStatus.CONFIRMED : RsvpStatus.REJECTED;
+        if (r.mealChoice) member.mealChoice = r.mealChoice;
+        if (r.allergies !== undefined) member.allergies = r.allergies;
+        if (r.transport !== undefined) member.transport = r.transport;
+        if (r.transportPickupPoint) member.transportPickupPoint = r.transportPickupPoint;
+        member.rsvpHistory.push({
+          rsvpStatus: member.rsvpStatus,
+          mealChoice: r.mealChoice,
+          allergies: r.allergies,
+          transport: r.transport,
+          transportPickupPoint: r.transportPickupPoint,
+          respondedAt: new Date(),
+          source: 'GUEST_WEB',
+        });
+        await member.save();
+      }),
+    );
+
+    // Registrar alergias personalizadas que no existen aún en el sistema
+    const existingAllergies = wedding.allergyOptions ?? [];
+    const submittedAllergies = dto.responses
+      .filter((r) => r.rsvpStatus === 'confirmed' && r.allergies)
+      .flatMap((r) => r.allergies!.split(', ').map((a) => a.trim()).filter(Boolean));
+    const newAllergies = [...new Set(submittedAllergies)].filter(
+      (a) => !existingAllergies.includes(a),
+    );
+    if (newAllergies.length > 0) {
+      await this.weddingModel.findByIdAndUpdate(
+        wedding._id,
+        { $addToSet: { allergyOptions: { $each: newAllergies } } },
+      );
+    }
+
+    return { success: true };
+  }
+
+  private guestToPublic(g: Record<string, unknown>) {
+    return {
+      id: (g._id as Types.ObjectId).toString(),
+      firstName: g.firstName,
+      lastName: g.lastName,
+      rsvpStatus: g.rsvpStatus,
+      mealChoice: g.mealChoice,
+      allergies: g.allergies,
+      transport: g.transport,
+      transportPickupPoint: g.transportPickupPoint,
+      groupId: g.groupId ? (g.groupId as Types.ObjectId).toString() : null,
+    };
   }
 
   toResponse(page: WebPage) {

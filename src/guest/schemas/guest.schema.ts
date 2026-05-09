@@ -57,6 +57,9 @@ export class Guest extends Document {
   @Prop({ default: false })
   invitationSent: boolean;
 
+  @Prop({ unique: true, sparse: true })
+  invitationToken?: string;
+
   @Prop({ default: 'A' })
   listName: string;
 

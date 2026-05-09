@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Te invitamos a nuestra boda</title>
+</head>
+<body style="margin:0;padding:0;background-color:#FAF7F2;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#FAF7F2;padding:40px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+          <tr>
+            <td align="center" style="padding:0 0 32px;">
+              <p style="margin:0;font-size:13px;letter-spacing:3px;text-transform:uppercase;color:#C4B7A6;">KissthePlan</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color:#FFFFFF;border-radius:16px;padding:48px 48px 40px;border:1px solid #E6D8C8;">
+              <p style="margin:0 0 8px;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#C4B7A6;">Te invitamos</p>
+              <h1 style="margin:0 0 24px;font-size:32px;font-style:italic;color:#4A3C32;font-weight:400;line-height:1.2;">Hola, {{guestName}}</h1>
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+                <tr><td style="height:1px;background-color:#E6D8C8;"></td></tr>
+              </table>
+              <p style="margin:0 0 20px;font-size:16px;line-height:1.7;color:#4A3C32;">Es un placer invitarte a celebrar nuestra boda:</p>
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#FAF7F2;border-radius:12px;padding:24px;margin-bottom:28px;">
+                <tr>
+                  <td>
+                    <p style="margin:0 0 6px;font-size:22px;font-style:italic;color:#4A3C32;font-weight:400;">{{partner1Name}} &amp; {{partner2Name}}</p>
+                    <p style="margin:0 0 4px;font-size:14px;color:#8c6f5f;">{{weddingDate}}</p>
+                    <p style="margin:0;font-size:14px;color:#8c6f5f;">{{weddingVenue}}</p>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:0 0 28px;font-size:15px;line-height:1.7;color:#4A3C32;">Por favor, confirma tu asistencia a traves del siguiente enlace. Solo te llevara un momento y nos ayuda mucho con la organizacion.</p>
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;">
+                <tr>
+                  <td align="center">
+                    <a href="{{rsvpUrl}}" style="display:inline-block;background-color:#c7a977;color:#FFFFFF;text-decoration:none;font-size:15px;font-weight:600;padding:14px 36px;border-radius:50px;letter-spacing:0.5px;">
+                      Confirmar asistencia
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:0 0 4px;font-size:12px;color:#C4B7A6;text-align:center;">Si el boton no funciona, copia este enlace:</p>
+              <p style="margin:0;font-size:12px;color:#c7a977;text-align:center;word-break:break-all;">
+                <a href="{{rsvpUrl}}" style="color:#c7a977;">{{rsvpUrl}}</a>
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding:28px 0 0;">
+              <p style="margin:0;font-size:11px;color:#C4B7A6;">Enviado con amor a traves de <a href="https://kisstheplan.es" style="color:#c7a977;text-decoration:none;">KissthePlan</a></p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
