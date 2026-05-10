@@ -8,11 +8,15 @@ import {
   Param,
   ParseIntPipe,
   UseGuards,
+  Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { SeatingService } from './seating.service';
+import { SeatingExportService } from './seating-export.service';
 import { CreatePlanDto } from './dto/create-plan.dto';
 import { UpdatePlanDto } from './dto/update-plan.dto';
+import { ExportSeatingPdfDto } from './dto/export-pdf.dto';
 import { CreateTableDto, UpdateTableDto } from './dto/table.dto';
 import { AssignSeatDto } from './dto/assign.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -24,7 +28,10 @@ import { CurrentWeddingId } from '../common/decorators/current-wedding-id.decora
 @UseGuards(JwtAuthGuard, WeddingGuard)
 @ApiBearerAuth()
 export class SeatingController {
-  constructor(private seatingService: SeatingService) {}
+  constructor(
+    private seatingService: SeatingService,
+    private seatingExportService: SeatingExportService,
+  ) {}
 
   // --- Plans ---
 
@@ -93,6 +100,23 @@ export class SeatingController {
   ) {
     const plan = await this.seatingService.deleteTable(planId, tableId, weddingId);
     return this.seatingService.toResponse(plan);
+  }
+
+  // --- Export ---
+
+  @Post('plans/:planId/export-pdf')
+  async exportPdf(
+    @CurrentWeddingId() weddingId: string,
+    @Param('planId') planId: string,
+    @Body() dto: ExportSeatingPdfDto,
+    @Res() res: Response,
+  ) {
+    const buffer = await this.seatingExportService.exportPdf(planId, weddingId, dto.imageData);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': 'attachment; filename="plano-mesas.pdf"',
+    });
+    res.send(buffer);
   }
 
   // --- Seat Assignments ---
