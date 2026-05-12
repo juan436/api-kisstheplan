@@ -6,6 +6,7 @@ FROM node:20.19.0-alpine AS builder
 # Instalar pnpm
 RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 
+
 WORKDIR /app
 
 # Copiar manifiestos primero (cache de capas óptimo)
