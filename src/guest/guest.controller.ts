@@ -119,7 +119,11 @@ export class GuestController {
   }
 
   @Post('import')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 5 * 1024 * 1024 },
+    }),
+  )
   async importExcel(
     @CurrentWeddingId() weddingId: string,
     @UploadedFile() file: Express.Multer.File,
