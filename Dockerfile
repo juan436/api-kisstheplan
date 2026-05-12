@@ -13,7 +13,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml* ./
 
 # Instalar TODAS las dependencias (dev + prod) para compilar
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 
 # Copiar código fuente y configuración
 COPY tsconfig.json tsconfig.build.json nest-cli.json ./
@@ -40,7 +40,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml* ./
 
 # Solo dependencias de producción (sin devDependencies)
-RUN pnpm install --frozen-lockfile --prod
+RUN pnpm install --no-frozen-lockfile --prod
 
 # Copiar el build compilado desde el stage anterior
 COPY --from=builder /app/dist ./dist
