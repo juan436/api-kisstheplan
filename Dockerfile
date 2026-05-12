@@ -29,7 +29,7 @@ RUN pnpm run build
 FROM node:20.19.0-alpine AS production
 
 # Instalar pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 
 # Variables de entorno de producción
 ENV NODE_ENV=production
