@@ -7,9 +7,13 @@ import {
   Body,
   Param,
   UseGuards,
+  Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ScriptService } from './script.service';
+import { ExcelService } from '../excel/excel.service';
+import { WeddingService } from '../wedding/wedding.service';
 import { CreateEntryDto } from './dto/create-entry.dto';
 import { UpdateEntryDto } from './dto/update-entry.dto';
 import { CreateAreaDto } from './dto/create-area.dto';
@@ -23,7 +27,11 @@ import { CurrentWeddingId } from '../common/decorators/current-wedding-id.decora
 @UseGuards(JwtAuthGuard, WeddingGuard)
 @ApiBearerAuth()
 export class ScriptController {
-  constructor(private scriptService: ScriptService) {}
+  constructor(
+    private scriptService: ScriptService,
+    private excelService: ExcelService,
+    private weddingService: WeddingService,
+  ) {}
 
   // --- Entries ---
 
@@ -68,6 +76,24 @@ export class ScriptController {
   ) {
     await this.scriptService.deleteEntry(entryId, weddingId);
     return { message: 'Entrada eliminada' };
+  }
+
+  // --- Export PDF ---
+
+  @Get('export/pdf')
+  async exportPdf(@CurrentWeddingId() weddingId: string, @Res() res: Response) {
+    const entries = await this.scriptService.findEntries(weddingId);
+    const wedding = await this.weddingService.findById(weddingId);
+    const weddingName = wedding ? `${wedding.partner1Name} & ${wedding.partner2Name}` : 'Mi Boda';
+    const mapped = entries.map((e) => ({
+      timeStart: (e as any).timeStart ?? undefined,
+      timeEnd:   (e as any).timeEnd   ?? undefined,
+      title:       e.title,
+      description: (e as any).description ?? undefined,
+    }));
+    const buffer = await this.excelService.generateScriptPdf(mapped, weddingName);
+    res.set({ 'Content-Type': 'application/pdf', 'Content-Disposition': 'attachment; filename="guion-boda.pdf"' });
+    res.send(buffer);
   }
 
   // --- Areas ---

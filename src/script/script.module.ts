@@ -5,6 +5,7 @@ import { ScriptArea, ScriptAreaSchema } from './schemas/script-area.schema';
 import { ScriptController } from './script.controller';
 import { ScriptService } from './script.service';
 import { WeddingModule } from '../wedding/wedding.module';
+import { ExcelModule } from '../excel/excel.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { WeddingModule } from '../wedding/wedding.module';
       { name: ScriptArea.name, schema: ScriptAreaSchema },
     ]),
     forwardRef(() => WeddingModule),
+    ExcelModule,
   ],
   controllers: [ScriptController],
   providers: [ScriptService],

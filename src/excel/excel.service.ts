@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import * as ExcelJS from 'exceljs';
 import PDFDocument = require('pdfkit');
+import * as https from 'https';
+import * as http from 'http';
 
 // Paleta Mocha & Gold
 const MOCHA       = '4A3C32';
@@ -614,6 +616,207 @@ export class ExcelService {
       );
 
       doc.end();
+    });
+  }
+
+  // ─── Script PDF ───────────────────────────────────────────────────────────
+
+  async generateScriptPdf(
+    entries: Array<{ timeStart?: string; timeEnd?: string; title: string; description?: string }>,
+    weddingName: string,
+  ): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+      const doc = new PDFDocument({ size: 'A4', margin: 0, info: { Title: `Guión — ${weddingName}`, Author: 'KissthePlan' } });
+      const chunks: Buffer[] = [];
+      doc.on('data', (c: Buffer) => chunks.push(c));
+      doc.on('end',  () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+
+      const PW = 595.28;
+      const PH = 841.89;
+      const ML = 44;
+      const TW = PW - ML * 2;
+      const pageBottom = PH - 40;
+
+      const txt = (text: string, x: number, y: number, opts: { w?: number; align?: 'left'|'center'|'right'; bold?: boolean; size?: number; color?: string; lineBreak?: boolean }) => {
+        doc.fillColor(opts.color ?? '#4A3C32')
+           .fontSize(opts.size ?? 9)
+           .font(opts.bold ? 'Helvetica-Bold' : 'Helvetica')
+           .text(text, x, y, { width: opts.w ?? TW, align: opts.align ?? 'left', lineBreak: opts.lineBreak ?? false });
+      };
+
+      // Header
+      doc.rect(0, 0, PW, 64).fill('#4A3C32');
+      txt('Guión de la Boda', ML, 14, { bold: true, size: 16, color: '#C7A977', w: TW });
+      txt(weddingName,        ML, 38, { size: 9,  color: '#FFFFFF', w: TW - 100 });
+      txt('KissthePlan',    PW - ML - 80, 38, { size: 8, color: '#C7A977', w: 80, align: 'right' });
+
+      let y = 80;
+
+      for (const entry of entries) {
+        const timeLabel = [entry.timeStart, entry.timeEnd].filter(Boolean).join(' – ');
+
+        // Calcular altura necesaria
+        doc.fontSize(10).font('Helvetica-Bold');
+        const titleH = doc.heightOfString(entry.title, { width: TW - (timeLabel ? 80 : 0) });
+        doc.fontSize(8.5).font('Helvetica');
+        const descH = entry.description ? doc.heightOfString(entry.description, { width: TW }) : 0;
+        const rowH = Math.max(20, titleH + (descH ? descH + 12 : 0) + 22);
+
+        if (y + rowH > pageBottom) {
+          doc.addPage({ size: 'A4', margin: 0 });
+          y = 40;
+        }
+
+        // Time badge
+        if (timeLabel) {
+          doc.roundedRect(ML, y + 4, 72, 16, 4).fill('#C7A977');
+          doc.fillColor('#FFFFFF').fontSize(7).font('Helvetica-Bold')
+             .text(timeLabel, ML, y + 8, { width: 72, align: 'center', lineBreak: false });
+          txt(entry.title, ML + 80, y + 5, { bold: true, size: 10, color: '#4A3C32', w: TW - 80, lineBreak: true });
+        } else {
+          txt(entry.title, ML, y + 5, { bold: true, size: 10, color: '#4A3C32', w: TW, lineBreak: true });
+        }
+
+        if (entry.description) {
+          const titleLineH = doc.fontSize(10).font('Helvetica-Bold').heightOfString(entry.title, { width: TW - (timeLabel ? 80 : 0) });
+          txt(entry.description, ML, y + 14 + titleLineH, { size: 8.5, color: '#8c7a6a', w: TW, lineBreak: true });
+        }
+
+        // Divider
+        y += rowH;
+        doc.moveTo(ML, y - 4).lineTo(ML + TW, y - 4).strokeColor('#D4C9B8').lineWidth(0.4).stroke();
+      }
+
+      // Footer
+      doc.moveTo(ML, PH - 22).lineTo(ML + TW, PH - 22).strokeColor('#D4C9B8').lineWidth(0.5).stroke();
+      txt(`Generado por KissthePlan  ·  ${new Date().toLocaleDateString('es-ES')}`, ML, PH - 14, { size: 6, color: '#9b8b7b', w: TW, align: 'center' });
+
+      doc.end();
+    });
+  }
+
+  // ─── Moodboard PDF ────────────────────────────────────────────────────────
+
+  async generateMoodboardPdf(note: {
+    title: string;
+    colorPalette: Array<{ hexColor: string; name?: string }>;
+    categories: Array<{ name: string; images: Array<{ url: string; caption?: string }> }>;
+  }): Promise<Buffer> {
+    // Pre-fetch images
+    const imageBuffers = new Map<string, Buffer | null>();
+    const allUrls = note.categories.flatMap((c) => c.images.map((i) => i.url));
+    await Promise.all(allUrls.map(async (url) => {
+      imageBuffers.set(url, await this.fetchRemoteImage(url));
+    }));
+
+    return new Promise((resolve, reject) => {
+      const doc = new PDFDocument({ size: 'A4', margin: 0, info: { Title: `Moodboard — ${note.title}`, Author: 'KissthePlan' } });
+      const chunks: Buffer[] = [];
+      doc.on('data', (c: Buffer) => chunks.push(c));
+      doc.on('end',  () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+
+      const PW = 595.28;
+      const PH = 841.89;
+      const ML = 44;
+      const TW = PW - ML * 2;
+      const pageBottom = PH - 40;
+
+      const txt = (text: string, x: number, y: number, opts: { w?: number; align?: 'left'|'center'|'right'; bold?: boolean; size?: number; color?: string }) => {
+        doc.fillColor(opts.color ?? '#4A3C32')
+           .fontSize(opts.size ?? 9)
+           .font(opts.bold ? 'Helvetica-Bold' : 'Helvetica')
+           .text(text, x, y, { width: opts.w ?? TW, align: opts.align ?? 'left', lineBreak: false });
+      };
+
+      // Header
+      doc.rect(0, 0, PW, 64).fill('#4A3C32');
+      txt('Moodboard', ML, 14, { bold: true, size: 16, color: '#C7A977', w: TW });
+      txt(note.title,  ML, 38, { size: 9,  color: '#FFFFFF', w: TW - 100 });
+      txt('KissthePlan', PW - ML - 80, 38, { size: 8, color: '#C7A977', w: 80, align: 'right' });
+
+      let y = 82;
+
+      // Color palette
+      if (note.colorPalette.length > 0) {
+        txt('Paleta de colores', ML, y, { bold: true, size: 11, color: '#4A3C32' });
+        y += 20;
+
+        const SW = 36; // swatch size
+        const GAP = 12;
+        let cx = ML;
+        for (const color of note.colorPalette) {
+          if (cx + SW + GAP + 60 > PW - ML && cx > ML) { cx = ML; y += SW + 24; }
+          doc.circle(cx + SW / 2, y + SW / 2, SW / 2).fill(color.hexColor);
+          doc.circle(cx + SW / 2, y + SW / 2, SW / 2).stroke('#D4C9B8').lineWidth(0.5);
+          txt(color.hexColor, cx, y + SW + 4, { size: 6.5, color: '#9b8b7b', w: SW + 20 });
+          if (color.name) txt(color.name, cx, y + SW + 14, { size: 7, color: '#4A3C32', w: SW + 30 });
+          cx += SW + GAP + 30;
+        }
+        y += SW + 36;
+        doc.moveTo(ML, y - 8).lineTo(ML + TW, y - 8).strokeColor('#D4C9B8').lineWidth(0.5).stroke();
+      }
+
+      // Categories
+      const IMG_W = (TW - 16) / 3;
+      const IMG_H = IMG_W * 0.7;
+
+      for (const cat of note.categories) {
+        if (cat.images.length === 0) continue;
+
+        if (y + 30 > pageBottom) { doc.addPage({ size: 'A4', margin: 0 }); y = 40; }
+
+        txt(cat.name, ML, y, { bold: true, size: 12, color: '#4A3C32' });
+        y += 20;
+
+        let col = 0;
+        for (const img of cat.images) {
+          if (col === 0 && y + IMG_H + 24 > pageBottom) {
+            doc.addPage({ size: 'A4', margin: 0 }); y = 40;
+          }
+          const ix = ML + col * (IMG_W + 8);
+          const imgBuf = imageBuffers.get(img.url);
+          if (imgBuf) {
+            try {
+              doc.image(imgBuf, ix, y, { width: IMG_W, height: IMG_H, cover: [IMG_W, IMG_H] });
+            } catch { doc.rect(ix, y, IMG_W, IMG_H).fill('#EDE4D9'); }
+          } else {
+            doc.rect(ix, y, IMG_W, IMG_H).fill('#EDE4D9');
+          }
+          if (img.caption) {
+            doc.fillColor('#8c7a6a').fontSize(6.5).font('Helvetica')
+               .text(img.caption, ix, y + IMG_H + 2, { width: IMG_W, align: 'center', lineBreak: false });
+          }
+          col++;
+          if (col === 3) { col = 0; y += IMG_H + 22; }
+        }
+        if (col > 0) y += IMG_H + 22;
+        y += 10;
+      }
+
+      // Footer
+      doc.moveTo(ML, PH - 22).lineTo(ML + TW, PH - 22).strokeColor('#D4C9B8').lineWidth(0.5).stroke();
+      txt(`Generado por KissthePlan  ·  ${new Date().toLocaleDateString('es-ES')}`, ML, PH - 14, { size: 6, color: '#9b8b7b', w: TW, align: 'center' });
+
+      doc.end();
+    });
+  }
+
+  private fetchRemoteImage(url: string): Promise<Buffer | null> {
+    return new Promise((resolve) => {
+      try {
+        const client = url.startsWith('https') ? https : http;
+        const req = client.get(url, (res) => {
+          if (res.statusCode !== 200) { res.resume(); resolve(null); return; }
+          const chunks: Buffer[] = [];
+          res.on('data', (c: Buffer) => chunks.push(c));
+          res.on('end', () => resolve(Buffer.concat(chunks)));
+          res.on('error', () => resolve(null));
+        });
+        req.on('error', () => resolve(null));
+        req.setTimeout(8000, () => { req.destroy(); resolve(null); });
+      } catch { resolve(null); }
     });
   }
 }

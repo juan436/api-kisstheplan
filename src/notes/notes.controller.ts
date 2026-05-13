@@ -1,5 +1,7 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Res, UseGuards } from '@nestjs/common';
+import { Response } from 'express';
 import { NotesService } from './notes.service';
+import { ExcelService } from '../excel/excel.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { WeddingGuard } from '../wedding/guards/wedding.guard';
 import { CurrentWeddingId } from '../common/decorators/current-wedding-id.decorator';
@@ -8,7 +10,10 @@ import { CreateNoteDto, UpdateNoteDto, AddColorDto, AddCategoryDto, AddImageDto 
 @UseGuards(JwtAuthGuard, WeddingGuard)
 @Controller('notes')
 export class NotesController {
-  constructor(private readonly notesService: NotesService) {}
+  constructor(
+    private readonly notesService: NotesService,
+    private readonly excelService: ExcelService,
+  ) {}
 
   @Get()
   async findAll(@CurrentWeddingId() weddingId: string) {
@@ -73,6 +78,22 @@ export class NotesController {
   ) {
     const note = await this.notesService.addImage(id, categoryId, weddingId, dto);
     return this.notesService.toResponse(note);
+  }
+
+  @Get(':id/export/pdf')
+  async exportMoodboardPdf(@Param('id') id: string, @CurrentWeddingId() weddingId: string, @Res() res: Response) {
+    const note = await this.notesService.findOne(id, weddingId);
+    const mapped = {
+      title: note.title,
+      colorPalette: (note.colorPalette || []).map((c) => ({ hexColor: c.hexColor, name: c.name })),
+      categories: (note.categories || []).map((cat) => ({
+        name: cat.name,
+        images: (cat.images || []).map((img) => ({ url: img.url, caption: img.caption })),
+      })),
+    };
+    const buffer = await this.excelService.generateMoodboardPdf(mapped);
+    res.set({ 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="moodboard.pdf"` });
+    res.send(buffer);
   }
 
   @Delete(':id/categories/:categoryId/images/:imageId')
