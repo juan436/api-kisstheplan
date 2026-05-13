@@ -55,7 +55,6 @@ export class VendorService {
   /** 
    * Synchronizes budget categories with vendor categories for a wedding.
    * - Ensures all categories currently used by vendors exist in the budget.
-   * - Removes budget categories that are not used by any vendor AND have no items.
    */
   private async syncBudget(weddingId: string) {
     const weddingOid = new Types.ObjectId(weddingId);

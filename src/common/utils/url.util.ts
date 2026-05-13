@@ -1,7 +1,7 @@
 /**
  * Utility to build clean URLs without double slashes or duplicated domains.
  */
-export function buildPublicUrl(relativePath: string): string {
+export function buildPublicUrl(relativePath: string | undefined): string {
   if (!relativePath) return '';
 
   // If it's already an absolute URL, return it as is
