@@ -22,6 +22,7 @@ export class UpdateWebPageDto {
   @IsOptional() @IsBoolean() rsvpEnabled?: boolean;
   @IsOptional() @IsDateString() rsvpDeadline?: string;
   @IsOptional() @IsArray() mealOptions?: string[];
+  @IsOptional() @IsArray() allergyOptions?: string[];
   @IsOptional() @IsArray() transportOptions?: string[];
   @IsOptional() @IsString() confirmMessage?: string;
   @IsOptional() @IsString() rejectMessage?: string;

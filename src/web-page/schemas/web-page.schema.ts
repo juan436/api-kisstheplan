@@ -39,6 +39,9 @@ export class WebPage extends Document {
   mealOptions: string[];
 
   @Prop({ type: [String], default: [] })
+  allergyOptions: string[];
+
+  @Prop({ type: [String], default: [] })
   transportOptions: string[];
 
   @Prop({ default: '' })
