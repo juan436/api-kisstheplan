@@ -89,15 +89,6 @@ export class VendorService {
         });
       }
     }
-
-    // 4. Cleanup: Remove budget categories with NO vendors and NO items
-    const budgetCats = await this.categoryModel.find({ weddingId: weddingOid });
-    for (const bCat of budgetCats) {
-      const nameLower = bCat.name.toLowerCase().trim();
-      if (!allVendorCats.has(nameLower) && (bCat.items || []).length === 0) {
-        await this.categoryModel.deleteOne({ _id: bCat._id });
-      }
-    }
   }
 
   async findAll(weddingId: string) {

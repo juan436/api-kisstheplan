@@ -11,6 +11,7 @@ import { CreateWeddingDto } from './dto/create-wedding.dto';
 import { UpdateWeddingDto } from './dto/update-wedding.dto';
 import { generateSlug } from './helpers/slug.helper';
 import { UserService } from '../user/user.service';
+import { buildPublicUrl } from '../common/utils/url.util';
 
 @Injectable()
 export class WeddingService {
@@ -119,7 +120,7 @@ export class WeddingService {
       estimatedBudget: wedding.estimatedBudget,
       currency: wedding.currency || 'EUR',
       timezone: wedding.timezone || 'Europe/Madrid',
-      photoUrl: wedding.photoUrl,
+      photoUrl: buildPublicUrl(wedding.photoUrl),
       slug: wedding.slug,
       mealOptions: wedding.mealOptions || [],
       allergyOptions: wedding.allergyOptions || [],

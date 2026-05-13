@@ -12,6 +12,7 @@ import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { buildPublicUrl } from '../common/utils/url.util';
 
 const UPLOADS_DIR = join(process.cwd(), 'uploads', 'photos');
 
@@ -58,12 +59,8 @@ export class UploadController {
   uploadPhoto(@UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('No se recibió ningún archivo');
 
-    // En producción, usar URL absoluta con el dominio
-    const baseUrl = process.env.API_BASE_URL;
     const relativeUrl = `/uploads/photos/${file.filename}`;
-
-    // Si hay API_BASE_URL configurado, devolver URL absoluta
-    const url = baseUrl ? `${baseUrl}${relativeUrl}` : relativeUrl;
+    const url = buildPublicUrl(relativeUrl);
 
     return { url };
   }

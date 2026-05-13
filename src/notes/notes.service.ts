@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Note, MoodboardColor, MoodboardCategory, MoodboardImage } from './schemas/note.schema';
 import { CreateNoteDto, UpdateNoteDto, AddColorDto, AddCategoryDto, AddImageDto } from './dto/note.dto';
+import { buildPublicUrl } from '../common/utils/url.util';
 
 @Injectable()
 export class NotesService {
@@ -148,7 +149,7 @@ export class NotesService {
         order: cat.order,
         images: (cat.images || []).map((img) => ({
           id: img._id.toString(),
-          url: img.url,
+          url: buildPublicUrl(img.url),
           caption: img.caption,
           order: img.order,
         })),
