@@ -7,7 +7,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { randomUUID } from 'crypto';
-import { Guest } from './schemas/guest.schema';
+import { Guest, GuestRole, RsvpStatus } from './schemas/guest.schema';
 import { GuestGroup } from './schemas/guest-group.schema';
 import { CreateGuestDto } from './dto/create-guest.dto';
 import { UpdateGuestDto } from './dto/update-guest.dto';
@@ -187,22 +187,39 @@ export class GuestService {
   }
 
   async importGuests(weddingId: string, guests: ParsedGuest[]): Promise<number> {
-    const docs = guests.map((g) => ({
-      weddingId:      new Types.ObjectId(weddingId),
-      firstName:      g.firstName,
-      lastName:       g.lastName       ?? '',
-      email:          g.email,
-      listName:       g.listName       ?? 'A',
-      mealChoice:     g.mealChoice,
-      allergies:      g.allergies,
-      address:        g.address,
-      transport:      g.transport      ?? false,
-      role:           g.role,
-      invitationSent: g.invitationSent ?? false,
-      rsvpStatus:     g.rsvpStatus     ?? 'pending',
+    if (guests.length === 0) return 0;
+    const weddingObjId = new Types.ObjectId(weddingId);
+    const ops = guests.map((g) => ({
+      updateOne: {
+        filter: {
+          weddingId: weddingObjId,
+          firstName: g.firstName,
+          lastName:  g.lastName ?? '',
+        },
+        update: {
+          $set: {
+            email:      g.email,
+            listName:   g.listName   ?? 'A',
+            mealChoice: g.mealChoice,
+            allergies:  g.allergies,
+            address:    g.address,
+            transport:  g.transport  ?? false,
+            role:       (g.role as GuestRole) ?? undefined,
+          },
+          // rsvpStatus e invitationSent solo se escriben al crear (no sobreescriben datos reales)
+          $setOnInsert: {
+            weddingId:      weddingObjId,
+            firstName:      g.firstName,
+            lastName:       g.lastName ?? '',
+            rsvpStatus:     (g.rsvpStatus as RsvpStatus) ?? RsvpStatus.PENDING,
+            invitationSent: false,
+          },
+        },
+        upsert: true,
+      },
     }));
-    const result = await this.guestModel.insertMany(docs, { ordered: false });
-    return result.length;
+    const result = await this.guestModel.bulkWrite(ops, { ordered: false });
+    return result.upsertedCount + result.modifiedCount;
   }
 
   async findByToken(token: string) {
