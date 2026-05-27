@@ -622,9 +622,11 @@ export class ExcelService {
   // ─── Script PDF ───────────────────────────────────────────────────────────
 
   async generateScriptPdf(
-    entries: Array<{ timeStart?: string; timeEnd?: string; title: string; description?: string }>,
+    entries: Array<{ timeStart?: string; timeEnd?: string; title: string; description?: string; style?: { bold?: boolean; color?: string; fontSize?: string } }>,
     weddingName: string,
   ): Promise<Buffer> {
+    const FONT_SIZE_MAP: Record<string, number> = { sm: 8.5, base: 10, lg: 12, xl: 14 };
+
     return new Promise((resolve, reject) => {
       const doc = new PDFDocument({ size: 'A4', margin: 0, info: { Title: `Guión — ${weddingName}`, Author: 'KissthePlan' } });
       const chunks: Buffer[] = [];
@@ -654,10 +656,14 @@ export class ExcelService {
       let y = 80;
 
       for (const entry of entries) {
+        const st        = entry.style ?? {};
+        const titleBold = st.bold ?? true;
+        const titleColor = st.color ?? '#4A3C32';
+        const titleSize = FONT_SIZE_MAP[st.fontSize ?? 'base'] ?? 10;
         const timeLabel = [entry.timeStart, entry.timeEnd].filter(Boolean).join(' – ');
 
         // Calcular altura necesaria
-        doc.fontSize(10).font('Helvetica-Bold');
+        doc.fontSize(titleSize).font(titleBold ? 'Helvetica-Bold' : 'Helvetica');
         const titleH = doc.heightOfString(entry.title, { width: TW - (timeLabel ? 80 : 0) });
         doc.fontSize(8.5).font('Helvetica');
         const descH = entry.description ? doc.heightOfString(entry.description, { width: TW }) : 0;
@@ -673,13 +679,13 @@ export class ExcelService {
           doc.roundedRect(ML, y + 4, 72, 16, 4).fill('#C7A977');
           doc.fillColor('#FFFFFF').fontSize(7).font('Helvetica-Bold')
              .text(timeLabel, ML, y + 8, { width: 72, align: 'center', lineBreak: false });
-          txt(entry.title, ML + 80, y + 5, { bold: true, size: 10, color: '#4A3C32', w: TW - 80, lineBreak: true });
+          txt(entry.title, ML + 80, y + 5, { bold: titleBold, size: titleSize, color: titleColor, w: TW - 80, lineBreak: true });
         } else {
-          txt(entry.title, ML, y + 5, { bold: true, size: 10, color: '#4A3C32', w: TW, lineBreak: true });
+          txt(entry.title, ML, y + 5, { bold: titleBold, size: titleSize, color: titleColor, w: TW, lineBreak: true });
         }
 
         if (entry.description) {
-          const titleLineH = doc.fontSize(10).font('Helvetica-Bold').heightOfString(entry.title, { width: TW - (timeLabel ? 80 : 0) });
+          const titleLineH = doc.fontSize(titleSize).font(titleBold ? 'Helvetica-Bold' : 'Helvetica').heightOfString(entry.title, { width: TW - (timeLabel ? 80 : 0) });
           txt(entry.description, ML, y + 14 + titleLineH, { size: 8.5, color: '#8c7a6a', w: TW, lineBreak: true });
         }
 

@@ -86,10 +86,11 @@ export class ScriptController {
     const wedding = await this.weddingService.findById(weddingId);
     const weddingName = wedding ? `${wedding.partner1Name} & ${wedding.partner2Name}` : 'Mi Boda';
     const mapped = entries.map((e) => ({
-      timeStart: (e as any).timeStart ?? undefined,
-      timeEnd:   (e as any).timeEnd   ?? undefined,
+      timeStart:   (e as any).timeStart   ?? undefined,
+      timeEnd:     (e as any).timeEnd     ?? undefined,
       title:       e.title,
       description: (e as any).description ?? undefined,
+      style:       (e as any).style       ?? {},
     }));
     const buffer = await this.excelService.generateScriptPdf(mapped, weddingName);
     res.set({ 'Content-Type': 'application/pdf', 'Content-Disposition': 'attachment; filename="guion-boda.pdf"' });
