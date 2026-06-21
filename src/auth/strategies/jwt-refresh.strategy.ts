@@ -18,8 +18,8 @@ export class JwtRefreshStrategy extends PassportStrategy(
     super(options);
   }
 
-  async validate(req: Request, payload: { sub: string; email: string }) {
+  async validate(req: Request, payload: { sub: string; email: string; weddingId: string | null; role: string | null }) {
     const refreshToken = req.body.refreshToken;
-    return { id: payload.sub, email: payload.email, refreshToken };
+    return { id: payload.sub, email: payload.email, weddingId: payload.weddingId ?? null, refreshToken };
   }
 }

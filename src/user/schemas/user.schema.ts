@@ -23,6 +23,9 @@ export class User extends Document {
 
   @Prop({ default: false })
   onboardingComplete: boolean;
+
+  @Prop({ type: String, enum: ['owner', 'collaborator', 'admin'], default: 'owner' })
+  role: 'owner' | 'collaborator' | 'admin';
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

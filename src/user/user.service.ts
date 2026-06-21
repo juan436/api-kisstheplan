@@ -19,8 +19,13 @@ export class UserService {
     email: string;
     passwordHash: string;
     name: string;
+    role?: 'owner' | 'collaborator';
   }): Promise<User> {
     return this.userModel.create(data);
+  }
+
+  async setRole(userId: string, role: 'owner' | 'collaborator'): Promise<void> {
+    await this.userModel.findByIdAndUpdate(userId, { role });
   }
 
   async createGoogleUser(data: {

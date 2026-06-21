@@ -3,4 +3,5 @@ export interface AuthUser {
   email: string;
   name: string;
   weddingId: string | null;
+  role: 'owner' | 'collaborator' | null;
 }

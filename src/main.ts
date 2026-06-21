@@ -24,7 +24,7 @@ async function bootstrap() {
     }),
   );
 
-  const corsOrigin = config.get<string>('CORS_ORIGIN', 'http://localhost:3000');
+  const corsOrigin = config.get<string>('CORS_ORIGIN', 'http://localhost:3010');
   const allowedOrigins = corsOrigin.split(',').map((o) => o.trim());
   app.enableCors({
     origin: (origin, callback) => {
@@ -51,7 +51,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api/docs', app, document);
 
-  const port = config.get<number>('PORT', 3001);
+  const port = config.get<number>('PORT', 3011);
   await app.listen(port, '0.0.0.0');
   console.log(`KissthePlan API running on http://localhost:${port}/api`);
   console.log(`Swagger docs: http://localhost:${port}/api/docs`);

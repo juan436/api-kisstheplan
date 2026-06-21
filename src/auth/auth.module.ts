@@ -9,13 +9,17 @@ import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { UserModule } from '../user/user.module';
 import { Wedding, WeddingSchema } from '../wedding/schemas/wedding.schema';
+import { Collaborator, CollaboratorSchema } from '../collaborator/schemas/collaborator.schema';
 
 @Module({
   imports: [
     UserModule,
     PassportModule,
     JwtModule.register({}),
-    MongooseModule.forFeature([{ name: Wedding.name, schema: WeddingSchema }]),
+    MongooseModule.forFeature([
+      { name: Wedding.name, schema: WeddingSchema },
+      { name: Collaborator.name, schema: CollaboratorSchema },
+    ]),
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, JwtRefreshStrategy, GoogleStrategy],

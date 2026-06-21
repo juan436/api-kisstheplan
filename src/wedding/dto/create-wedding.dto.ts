@@ -3,6 +3,7 @@ import {
   IsDateString,
   IsNumber,
   IsOptional,
+  IsIn,
   Min,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
@@ -48,4 +49,9 @@ export class CreateWeddingDto {
   @IsNumber()
   @Min(0)
   estimatedBudget: number;
+
+  @ApiProperty({ example: 'trial', enum: ['trial', 'annual'] })
+  @IsOptional()
+  @IsIn(['trial', 'annual'])
+  plan?: 'trial' | 'annual';
 }

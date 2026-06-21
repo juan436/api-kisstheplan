@@ -18,6 +18,9 @@ import { ScriptModule } from './script/script.module';
 import { SeatingModule } from './seating/seating.module';
 import { NotesModule } from './notes/notes.module';
 import { LeadModule } from './lead/lead.module';
+import { CollaboratorModule } from './collaborator/collaborator.module';
+import { SubscriptionModule } from './subscription/subscription.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -45,6 +48,9 @@ import { LeadModule } from './lead/lead.module';
     SeatingModule,
     NotesModule,
     LeadModule,
+    CollaboratorModule,
+    SubscriptionModule,
+    AdminModule,
   ],
   controllers: [AppController],
 })

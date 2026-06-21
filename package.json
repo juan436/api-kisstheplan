@@ -10,7 +10,9 @@
     "start:prod": "node dist/main",
     "seed": "ts-node -r tsconfig-paths/register src/seed.ts",
     "seed:tasks": "ts-node -r tsconfig-paths/register src/seed-tasks-with-dates.ts",
-    "migrate:userid": "ts-node -r tsconfig-paths/register src/scripts/fix-wedding-userid.ts"
+    "migrate:userid": "ts-node -r tsconfig-paths/register src/scripts/fix-wedding-userid.ts",
+    "migrate:roles": "ts-node -r tsconfig-paths/register src/migrate-user-roles.ts",
+    "seed:admin": "ts-node -r tsconfig-paths/register src/seed-admin.ts"
   },
   "dependencies": {
     "@nestjs-modules/mailer": "^2.3.4",

@@ -47,10 +47,29 @@ export class AuthController {
   @UseGuards(JwtRefreshGuard)
   @HttpCode(HttpStatus.OK)
   async refresh(
-    @CurrentUser() user: { id: string; refreshToken: string },
+    @CurrentUser() user: { id: string; weddingId: string | null; refreshToken: string },
     @Body() _dto: RefreshTokenDto,
   ) {
-    return this.authService.refresh(user.id, user.refreshToken);
+    return this.authService.refresh(user.id, user.refreshToken, user.weddingId);
+  }
+
+  @Get('weddings')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async getAvailableWeddings(@CurrentUser('id') userId: string) {
+    return this.authService.resolveAllWeddings(userId);
+  }
+
+  @Post('switch-wedding')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  async switchWedding(
+    @CurrentUser('id') userId: string,
+    @CurrentUser('email') email: string,
+    @Body() body: { weddingId: string },
+  ) {
+    return this.authService.switchWedding(userId, email, body.weddingId);
   }
 
   @Get('me')

@@ -8,6 +8,7 @@ import {
   UseGuards,
   Inject,
   forwardRef,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -19,6 +20,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { TaskService } from '../task/task.service';
 import { ExpenseCategory } from '../budget/schemas/expense-category.schema';
+import { SubscriptionService } from '../subscription/subscription.service';
 
 const DEFAULT_CATEGORY_NAMES = [
   'Finca / Lugar', 'Catering', 'Fotografía', 'Vídeo',
@@ -34,13 +36,15 @@ export class WeddingController {
     private weddingService: WeddingService,
     @Inject(forwardRef(() => TaskService)) private taskService: TaskService,
     @InjectModel(ExpenseCategory.name) private categoryModel: Model<ExpenseCategory>,
+    private subscriptionService: SubscriptionService,
   ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async create(@CurrentUser('id') userId: string, @Body() dto: CreateWeddingDto) {
-    const wedding = await this.weddingService.create(userId, dto);
+    const { plan = 'trial', ...weddingData } = dto;
+    const wedding = await this.weddingService.create(userId, weddingData as CreateWeddingDto);
     const weddingId = wedding._id.toString();
 
     await Promise.all([
@@ -53,6 +57,7 @@ export class WeddingController {
           items: [],
         })),
       ),
+      this.subscriptionService.create(weddingId, userId, plan),
     ]);
 
     return this.weddingService.toResponse(wedding);
@@ -61,8 +66,14 @@ export class WeddingController {
   @Get('me')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async getMyWedding(@CurrentUser('id') userId: string) {
-    const wedding = await this.weddingService.findByUserId(userId);
+  async getMyWedding(
+    @CurrentUser('weddingId') weddingId: string | null,
+    @CurrentUser('id') userId: string,
+  ) {
+    const wedding = weddingId
+      ? await this.weddingService.findById(weddingId)
+      : await this.weddingService.findByUserId(userId);
+    if (!wedding) throw new NotFoundException('Boda no encontrada');
     return this.weddingService.toResponse(wedding);
   }
 

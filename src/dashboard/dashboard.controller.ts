@@ -12,7 +12,7 @@ export class DashboardController {
   constructor(private dashboardService: DashboardService) {}
 
   @Get('summary')
-  async getSummary(@CurrentUser('id') userId: string) {
-    return this.dashboardService.getSummary(userId);
+  async getSummary(@CurrentUser('weddingId') weddingId: string) {
+    return this.dashboardService.getSummary(weddingId);
   }
 }

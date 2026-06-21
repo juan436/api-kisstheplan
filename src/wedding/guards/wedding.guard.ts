@@ -1,13 +1,18 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, NotFoundException } from '@nestjs/common';
 import { WeddingService } from '../wedding.service';
+import { AuthUser } from '../../common/interfaces/auth-user.interface';
 
 @Injectable()
 export class WeddingGuard implements CanActivate {
   constructor(private weddingService: WeddingService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest<{ user: { id: string }; wedding: unknown }>();
-    request.wedding = await this.weddingService.findByUserId(request.user.id);
+    const request = context.switchToHttp().getRequest<{ user: AuthUser; wedding: unknown }>();
+    const { weddingId } = request.user;
+    if (!weddingId) throw new NotFoundException('No tienes boda creada');
+    const wedding = await this.weddingService.findById(weddingId);
+    if (!wedding) throw new NotFoundException('Boda no encontrada');
+    request.wedding = wedding;
     return true;
   }
 }

@@ -7,6 +7,7 @@ import { WeddingService } from './wedding.service';
 import { TaskModule } from '../task/task.module';
 import { UserModule } from '../user/user.module';
 import { ExpenseCategory, ExpenseCategorySchema } from '../budget/schemas/expense-category.schema';
+import { SubscriptionModule } from '../subscription/subscription.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { ExpenseCategory, ExpenseCategorySchema } from '../budget/schemas/expens
     ]),
     forwardRef(() => TaskModule),
     UserModule,
+    SubscriptionModule,
   ],
   controllers: [WeddingController],
   providers: [WeddingService, WeddingGuard],

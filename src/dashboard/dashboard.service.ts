@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { WeddingService } from '../wedding/wedding.service';
 import { GuestService } from '../guest/guest.service';
 import { BudgetSummaryService } from '../budget/budget-summary.service';
@@ -15,9 +15,9 @@ export class DashboardService {
     private taskService: TaskService,
   ) {}
 
-  async getSummary(userId: string) {
-    const wedding = await this.weddingService.findByUserId(userId);
-    const weddingId = wedding._id.toString();
+  async getSummary(weddingId: string) {
+    const wedding = await this.weddingService.findById(weddingId);
+    if (!wedding) throw new NotFoundException('Boda no encontrada');
 
     const [guestStats, budgetSummary, upcomingTasks, upcomingPayments, taskProgress] =
       await Promise.all([
