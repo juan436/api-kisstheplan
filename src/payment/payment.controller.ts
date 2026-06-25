@@ -1,0 +1,50 @@
+import { Controller, Post, Body, Headers, Req, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { Request } from 'express';
+import { PaymentService } from './payment.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { CurrentWeddingId } from '../common/decorators/current-wedding-id.decorator';
+
+interface JwtPayload {
+  sub: string;
+  email: string;
+  weddingId: string | null;
+  role: string | null;
+}
+
+@ApiTags('payments')
+@Controller('payments')
+export class PaymentController {
+  constructor(private readonly paymentService: PaymentService) {}
+
+  @Post('stripe/checkout')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async createCheckout(
+    @CurrentUser() user: JwtPayload,
+    @CurrentWeddingId() weddingId: string,
+  ): Promise<{ url: string }> {
+    const url = await this.paymentService.createCheckoutSession(weddingId, user.sub);
+    return { url };
+  }
+
+  @Post('stripe/portal')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async createPortal(
+    @Body('stripeCustomerId') stripeCustomerId: string,
+  ): Promise<{ url: string }> {
+    const url = await this.paymentService.createPortalSession(stripeCustomerId);
+    return { url };
+  }
+
+  @Post('stripe/webhook')
+  async handleWebhook(
+    @Req() req: Request,
+    @Headers('stripe-signature') signature: string,
+  ): Promise<{ received: boolean }> {
+    await this.paymentService.handleWebhook(req.body as Buffer, signature);
+    return { received: true };
+  }
+}

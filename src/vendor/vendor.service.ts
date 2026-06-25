@@ -190,21 +190,21 @@ export class VendorService {
   }
 
   // Activity
-  async addActivity(weddingId: string, vendorId: string, dto: CreateVendorActivityDto) {
-    const vendor = await this.vendorModel.findOne({
-      _id: new Types.ObjectId(vendorId),
-      weddingId: new Types.ObjectId(weddingId),
-    });
-    if (!vendor) throw new NotFoundException('Vendor not found');
-    vendor.activity.unshift({
+  async addActivity(weddingId: string, vendorId: string, dto: CreateVendorActivityDto, authorName = 'Usuario') {
+    const newEntry = {
       type: dto.type,
       content: dto.content,
       fileUrl: dto.fileUrl,
       fileName: dto.fileName,
-      author: 'Tú',
+      author: authorName,
       createdAt: new Date(),
-    } as VendorActivity);
-    await vendor.save();
+    };
+    const vendor = await this.vendorModel.findOneAndUpdate(
+      { _id: new Types.ObjectId(vendorId), weddingId: new Types.ObjectId(weddingId) },
+      { $push: { activity: { $each: [newEntry], $position: 0 } } },
+      { new: true },
+    );
+    if (!vendor) throw new NotFoundException('Vendor not found');
     return this.toResponse(vendor);
   }
 }

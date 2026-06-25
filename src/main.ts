@@ -14,6 +14,8 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
+  // Raw body para verificación de firma del webhook de Stripe
+  app.use('/api/payments/stripe/webhook', bodyParser.raw({ type: 'application/json' }));
   app.use(bodyParser.json({ limit: '5mb' }));
   app.use(bodyParser.urlencoded({ limit: '5mb', extended: true }));
 

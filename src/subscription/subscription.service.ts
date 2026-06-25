@@ -50,6 +50,25 @@ export class SubscriptionService {
     return this.subscriptionModel.findOne({ weddingId: new Types.ObjectId(weddingId) });
   }
 
+  async activate(weddingId: string, userId: string, stripeSessionId: string): Promise<void> {
+    const now = new Date();
+    await this.subscriptionModel.findOneAndUpdate(
+      { weddingId: new Types.ObjectId(weddingId) },
+      {
+        $set: {
+          plan: 'annual',
+          status: 'active',
+          stripeSubscriptionId: stripeSessionId,
+          currentPeriodStart: now,
+          currentPeriodEnd: new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000),
+          amount: 70,
+          trialEndDate: null,
+        },
+      },
+      { upsert: true },
+    );
+  }
+
   async findAllForAdmin(): Promise<Subscription[]> {
     return this.subscriptionModel.find().sort({ createdAt: -1 });
   }

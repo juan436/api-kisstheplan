@@ -11,6 +11,7 @@ import { CreateVendorActivityDto } from './dto/vendor-activity.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { WeddingGuard } from '../wedding/guards/wedding.guard';
 import { CurrentWeddingId } from '../common/decorators/current-wedding-id.decorator';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @ApiTags('Vendors')
 @Controller('vendors')
@@ -78,7 +79,8 @@ export class VendorController {
     @CurrentWeddingId() weddingId: string,
     @Param('id') id: string,
     @Body() dto: CreateVendorActivityDto,
+    @CurrentUser() user: { name: string },
   ) {
-    return this.vendorService.addActivity(weddingId, id, dto);
+    return this.vendorService.addActivity(weddingId, id, dto, user.name);
   }
 }

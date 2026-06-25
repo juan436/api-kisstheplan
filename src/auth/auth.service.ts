@@ -102,6 +102,18 @@ export class AuthService {
     return { ...tokens, role: target.role, weddingId: target.weddingId };
   }
 
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+    const user = await this.userService.findById(userId);
+    if (!user) throw new UnauthorizedException();
+    if (!user.passwordHash) throw new ForbiddenException('Esta cuenta usa Google. No puedes cambiar la contraseña.');
+
+    const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!valid) throw new UnauthorizedException('La contraseña actual no es correcta');
+
+    const newHash = await bcrypt.hash(newPassword, 12);
+    await this.userService.updatePasswordHash(userId, newHash);
+  }
+
   async logout(userId: string) {
     await this.userService.updateRefreshToken(userId, null);
   }
@@ -115,7 +127,7 @@ export class AuthService {
       name: user.name,
       avatarUrl: user.avatarUrl,
       onboardingComplete: user.onboardingComplete ?? false,
-      role: user.role ?? 'owner',
+      role: user.role ?? 'user',
     };
   }
 

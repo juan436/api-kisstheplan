@@ -21,6 +21,7 @@ import { LeadModule } from './lead/lead.module';
 import { CollaboratorModule } from './collaborator/collaborator.module';
 import { SubscriptionModule } from './subscription/subscription.module';
 import { AdminModule } from './admin/admin.module';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { AdminModule } from './admin/admin.module';
     CollaboratorModule,
     SubscriptionModule,
     AdminModule,
+    PaymentModule,
   ],
   controllers: [AppController],
 })

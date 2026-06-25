@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ConflictException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -92,7 +93,7 @@ export class CollaboratorService {
     if (existingUser) throw new ConflictException('Este email ya tiene una cuenta en KissthePlan');
 
     const passwordHash = await bcrypt.hash(password, 12);
-    const user = await this.userService.create({ email: email.toLowerCase().trim(), passwordHash, name, role: 'collaborator' });
+    const user = await this.userService.create({ email: email.toLowerCase().trim(), passwordHash, name });
     await this.userService.setOnboardingComplete(user._id.toString());
 
     const collaborator = await this.collaboratorModel.create({
@@ -129,7 +130,11 @@ export class CollaboratorService {
     if (!collaborator) throw new NotFoundException('Invitación no válida');
     if (collaborator.status === 'revoked') throw new BadRequestException('Esta invitación ha sido revocada');
 
-    await this.userService.setRole(userId, 'collaborator');
+    const user = await this.userService.findById(userId);
+    if (!user || user.email.toLowerCase() !== collaborator.email.toLowerCase()) {
+      throw new ForbiddenException('Esta invitación no pertenece a tu cuenta');
+    }
+
     await this.userService.setOnboardingComplete(userId);
 
     if (collaborator.status === 'accepted') {
