@@ -2,7 +2,6 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -66,9 +65,6 @@ export class WeddingService {
   ): Promise<Wedding> {
     const wedding = await this.weddingModel.findById(weddingId);
     if (!wedding) throw new NotFoundException('Boda no encontrada');
-    if (wedding.userId.toString() !== userId) {
-      throw new ForbiddenException();
-    }
 
     if (dto.slug && dto.slug !== wedding.slug) {
       const slugTaken = await this.weddingModel.findOne({

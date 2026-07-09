@@ -21,6 +21,6 @@ import { SubscriptionModule } from '../subscription/subscription.module';
   ],
   controllers: [WeddingController],
   providers: [WeddingService, WeddingGuard],
-  exports: [WeddingService, WeddingGuard],
+  exports: [WeddingService, WeddingGuard, SubscriptionModule],
 })
 export class WeddingModule {}

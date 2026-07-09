@@ -37,8 +37,8 @@ export class PaymentService {
         },
       ],
       metadata: { weddingId, userId },
-      success_url: `${frontendUrl}/app/cuenta?payment=success`,
-      cancel_url: `${frontendUrl}/app/cuenta?payment=cancelled`,
+      success_url: `${frontendUrl}/app/account?payment=success`,
+      cancel_url: `${frontendUrl}/app/account?payment=cancelled`,
     });
 
     if (!session.url) throw new BadRequestException('No se pudo crear la sesión de pago');
@@ -49,7 +49,7 @@ export class PaymentService {
     const frontendUrl = this.config.get<string>('FRONTEND_URL', 'http://localhost:3000');
     const session = await this.stripe.billingPortal.sessions.create({
       customer: stripeCustomerId,
-      return_url: `${frontendUrl}/app/cuenta`,
+      return_url: `${frontendUrl}/app/account`,
     });
     return session.url;
   }

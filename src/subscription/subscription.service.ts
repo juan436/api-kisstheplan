@@ -47,7 +47,12 @@ export class SubscriptionService {
   }
 
   async findByWeddingId(weddingId: string): Promise<Subscription | null> {
-    return this.subscriptionModel.findOne({ weddingId: new Types.ObjectId(weddingId) });
+    const sub = await this.subscriptionModel.findOne({ weddingId: new Types.ObjectId(weddingId) });
+    if (sub && sub.status === 'trial' && sub.trialEndDate && sub.trialEndDate < new Date()) {
+      sub.status = 'expired';
+      await sub.save();
+    }
+    return sub;
   }
 
   async activate(weddingId: string, userId: string, stripeSessionId: string): Promise<void> {
