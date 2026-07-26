@@ -56,13 +56,17 @@ export class PaymentService {
 
   async handleWebhook(rawBody: Buffer, signature: string): Promise<void> {
     const webhookSecret = this.config.get<string>('STRIPE_WEBHOOK_SECRET', '');
+    console.log('[stripe-webhook] hit. hasSignature:', !!signature, 'bodyLength:', rawBody?.length);
     let event: Stripe.Event;
 
     try {
       event = this.stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
-    } catch {
+    } catch (err) {
+      console.error('[stripe-webhook] signature verification FAILED:', (err as Error).message);
       throw new BadRequestException('Webhook signature inválida');
     }
+
+    console.log('[stripe-webhook] event verified. type:', event.type, 'id:', event.id);
 
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session;
@@ -70,8 +74,13 @@ export class PaymentService {
       const userId = session.metadata?.userId;
       const stripeSessionId = session.id;
 
+      console.log('[stripe-webhook] checkout.session.completed. metadata:', { weddingId, userId, stripeSessionId });
+
       if (weddingId && userId) {
         await this.subscriptionService.activate(weddingId, userId, stripeSessionId);
+        console.log('[stripe-webhook] subscription activated for weddingId:', weddingId);
+      } else {
+        console.error('[stripe-webhook] MISSING metadata weddingId/userId in session:', session.id);
       }
     }
   }
