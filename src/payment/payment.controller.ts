@@ -4,13 +4,7 @@ import { Request } from 'express';
 import { PaymentService } from './payment.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-
-interface JwtPayload {
-  sub: string;
-  email: string;
-  weddingId: string | null;
-  role: string | null;
-}
+import { AuthUser } from '../common/interfaces/auth-user.interface';
 
 @ApiTags('payments')
 @Controller('payments')
@@ -21,9 +15,9 @@ export class PaymentController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async createCheckout(
-    @CurrentUser() user: JwtPayload,
+    @CurrentUser() user: AuthUser,
   ): Promise<{ url: string }> {
-    const url = await this.paymentService.createCheckoutSession(user.weddingId!, user.sub);
+    const url = await this.paymentService.createCheckoutSession(user.weddingId!, user.id);
     return { url };
   }
 
