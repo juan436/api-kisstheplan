@@ -156,6 +156,17 @@ export class SeatingService {
     const seat = table.assignments.find((a) => a.seatNumber === seatNumber);
     if (!seat) throw new NotFoundException('Asiento no encontrado');
 
+    // A guest can only occupy one seat within this plan at a time — clear any other seat they held before reassigning.
+    if (guestId) {
+      for (const t of plan.tables) {
+        for (const a of t.assignments) {
+          if (a.guestId?.toString() === guestId && a !== seat) {
+            a.guestId = undefined;
+          }
+        }
+      }
+    }
+
     seat.guestId = guestId ? new Types.ObjectId(guestId) : undefined;
 
     await plan.save();
